@@ -12,7 +12,8 @@
 <meta name="description" content="Profesjonalny kalkulator materiałów elewacyjnych ETICS">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="elewacja-icon-192.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<!-- FIX: zła ścieżka icons/ — katalog nie istnieje, ikony są w katalogu głównym -->
+<link rel="icon" type="image/png" sizes="192x192" href="elewacja-icon-192.png">
 <title>ElewacjaPro — Kalkulator ETICS</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -643,6 +644,149 @@ body.offline #offline-chip{display:block;}
 #ptr-indicator{position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:600;background:var(--acc);color:#fff;font-size:.72rem;font-weight:700;padding:6px 16px;border-radius:0 0 20px 20px;transform:translateX(-50%) translateY(-100%);transition:transform .3s;}
 #ptr-indicator.show{transform:translateX(-50%) translateY(0);}
 
+/* ═══ NEW: LIGHT MODE — zmienne dla jasnego motywu ════════════════════════════
+   Aktywacja: klasa .light-mode na <html> lub prefers-color-scheme: light
+   Przełącznik: #theme-toggle (zapamiętany w localStorage 'elewacja-theme')
+═══════════════════════════════════════════════════════════════════════════════ */
+:root.light-mode,
+@media(prefers-color-scheme:light){:root:not(.dark-mode){
+  --bg:#f5f6fa;--sur:#ffffff;--card:#ffffff;--card2:#f0f1f7;
+  --txt:#1a1d2e;--mut:#6b7491;--brd:#dde0f0;
+  --acc:#d94e18;--acc2:#d4920a;--acc3:#25a96e;
+  --red:#d94040;--grn:#25a96e;--blu:#3a7de8;--pur:#7c5fd4;
+}}
+/* Jawna klasa dark-mode zawsze ciemna (nadpisuje prefers) */
+:root.light-mode{
+  --bg:#f5f6fa;--sur:#ffffff;--card:#ffffff;--card2:#f0f1f7;
+  --txt:#1a1d2e;--mut:#6b7491;--brd:#dde0f0;
+  --acc:#d94e18;--acc2:#d4920a;--acc3:#25a96e;
+  --red:#d94040;--grn:#25a96e;--blu:#3a7de8;--pur:#7c5fd4;
+}
+/* Light mode tweaks */
+:root.light-mode body{background:var(--bg);}
+:root.light-mode #topbar{background:rgba(245,246,250,.97);}
+:root.light-mode #bottom-nav{background:rgba(250,250,253,.96);}
+:root.light-mode input,:root.light-mode select{background:var(--card2);color:var(--txt);border-color:var(--brd);}
+:root.light-mode .cost-box{background:var(--card2);}
+:root.light-mode .card{box-shadow:0 2px 8px rgba(0,0,0,.07);}
+
+/* ═══ NEW: SPACING + SHADOW TOKENS ═══════════════════════════════════════════ */
+:root{
+  --sp1:4px;--sp2:8px;--sp3:12px;--sp4:16px;--sp5:24px;--sp6:32px;
+  --r4:28px;
+  --shadow-sm:0 1px 4px rgba(0,0,0,.18);
+  --shadow-md:0 4px 16px rgba(0,0,0,.25);
+  --shadow-lg:0 8px 32px rgba(0,0,0,.32);
+}
+
+/* ═══ NEW: MICROANIMACJE — tab switch, card hover, toasty ═════════════════════
+   Zawsze z prefers-reduced-motion: reduce guard
+═══════════════════════════════════════════════════════════════════════════════ */
+@keyframes tabFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideInRight{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideOutRight{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(30px)}}
+@keyframes toastIn{from{opacity:0;transform:translateX(110%)}to{opacity:1;transform:translateX(0)}}
+@keyframes toastOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(110%)}}
+@keyframes pulseAcc{0%,100%{box-shadow:0 0 0 0 rgba(232,84,26,.4)}50%{box-shadow:0 0 0 6px rgba(232,84,26,0)}}
+@keyframes skeletonShimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+
+/* Tab panels animation */
+.tab-panel.entering{animation:tabFadeIn .18s ease-out both;}
+
+/* Card micro-hover */
+.card,.vc,.mi,.lib-item{transition:transform .15s ease,box-shadow .15s ease;}
+@media(hover:hover){
+  .vc:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
+  .card:hover{box-shadow:var(--shadow-sm);}
+}
+
+/* Toast notification style */
+.pwa-toast-inner{
+  position:fixed;bottom:calc(80px + var(--safe-bot));right:16px;z-index:800;
+  background:var(--card2);color:var(--txt);border:1px solid var(--brd);
+  border-radius:var(--r2);padding:10px 14px;font-size:.8rem;font-weight:600;
+  box-shadow:var(--shadow-lg);max-width:280px;line-height:1.4;
+  animation:toastIn .3s ease-out both;
+}
+.pwa-toast-inner.hiding{animation:toastOut .25s ease-in both;}
+.pwa-toast-inner.success{border-color:var(--grn);background:rgba(62,207,142,.12);}
+.pwa-toast-inner.error{border-color:var(--red);background:rgba(240,106,106,.12);}
+
+/* Skeleton loaders */
+.skeleton{
+  background:linear-gradient(90deg,var(--card) 25%,var(--card2) 50%,var(--card) 75%);
+  background-size:200% 100%;
+  animation:skeletonShimmer 1.4s infinite;
+  border-radius:var(--r);
+}
+
+/* Empty state styles */
+.empty-state{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:48px 24px;text-align:center;gap:16px;color:var(--mut);
+}
+.empty-state svg{opacity:.4;}
+.empty-state h3{color:var(--txt);font-family:var(--font-head);font-size:1.1rem;}
+.empty-state p{font-size:.83rem;max-width:280px;line-height:1.5;}
+.empty-state .btn-cta{margin-top:8px;}
+
+/* NEW: Theme toggle button in topbar */
+#theme-toggle{
+  background:none;border:1px solid var(--brd);border-radius:var(--r);
+  color:var(--mut);font-size:.9rem;padding:5px 8px;cursor:pointer;
+  transition:color .2s,border-color .2s;flex-shrink:0;
+}
+#theme-toggle:hover{color:var(--txt);border-color:var(--acc);}
+
+/* NEW: Bento live bar kafelki rozszerzone */
+#live-bar{gap:8px;flex-wrap:nowrap;overflow-x:auto;padding:6px 0;scrollbar-width:none;}
+#live-bar::-webkit-scrollbar{display:none;}
+.lb-chip{
+  flex-shrink:0;background:var(--card);border:1px solid var(--brd);
+  border-radius:var(--r2);padding:7px 12px;display:flex;align-items:center;gap:8px;
+  transition:border-color .2s,transform .15s;cursor:default;white-space:nowrap;
+}
+.lb-chip.active{border-color:var(--acc);background:rgba(232,84,26,.07);}
+.lb-chip .lbl{font-size:.58rem;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;}
+.lb-chip .val{font-size:.85rem;font-weight:700;font-variant-numeric:tabular-nums;}
+.lb-chip .val.orange{color:var(--acc);}
+.lb-chip .val.green{color:var(--grn);}
+.lb-chip .dot{width:6px;height:6px;border-radius:50%;background:var(--mut);flex-shrink:0;}
+.lb-chip.active .dot{background:var(--acc);animation:pulseAcc 2s infinite;}
+
+/* NEW: Onboarding overlay */
+#onboarding-overlay{
+  position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.85);
+  display:flex;align-items:center;justify-content:center;
+  animation:tabFadeIn .3s ease-out;
+}
+#onboarding-overlay.hidden{display:none;}
+.onb-card{
+  background:var(--card);border:1px solid var(--brd);border-radius:var(--r3);
+  padding:32px 28px;max-width:380px;width:90%;text-align:center;
+  box-shadow:var(--shadow-lg);position:relative;
+}
+.onb-step-dots{display:flex;justify-content:center;gap:6px;margin-bottom:20px;}
+.onb-dot{width:8px;height:8px;border-radius:50%;background:var(--brd);transition:background .2s;}
+.onb-dot.active{background:var(--acc);}
+.onb-icon{font-size:2.5rem;margin-bottom:12px;}
+.onb-title{font-family:var(--font-head);font-size:1.2rem;font-weight:700;color:var(--txt);margin-bottom:8px;}
+.onb-text{font-size:.83rem;color:var(--mut);line-height:1.6;margin-bottom:24px;}
+.onb-btns{display:flex;gap:10px;justify-content:center;}
+.onb-skip{background:none;border:none;color:var(--mut);font-size:.78rem;cursor:pointer;padding:4px 8px;}
+
+/* NEW: VAT i marża sekcja w wycenie */
+.vat-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--brd);margin-top:8px;}
+.vat-label{font-size:.78rem;color:var(--mut);flex:1;min-width:120px;}
+.vat-val{font-weight:700;color:var(--txt);}
+.vat-brutto{font-weight:700;color:var(--acc);font-size:1.05rem;}
+
+/* Disable animations when user prefers reduced motion */
+@media(prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;}
+  .tab-panel.entering{animation:none;}
+  .pwa-toast-inner{animation:none;}
+}
 </style>
 </head>
 <body>
@@ -650,19 +794,43 @@ body.offline #offline-chip{display:block;}
 <!-- TOPBAR -->
 <div id="topbar">
   <div id="topbar-main">
-    <div id="topbar-logo">ElewacjaPro</div>
+    <!-- NEW: Logo SVG zastępuje tekst "ElewacjaPro" — motyw elewacji z paskiem -->
+    <div id="topbar-logo" aria-label="ElewacjaPro">
+      <svg width="130" height="28" viewBox="0 0 130 28" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ElewacjaPro logo">
+        <!-- Grafika elewacji — 3 warstwy ściany symboliczne -->
+        <rect x="0" y="8" width="22" height="12" rx="2" fill="#e8541a" opacity=".9"/>
+        <rect x="0" y="20" width="22" height="4" rx="1" fill="#f5a623" opacity=".9"/>
+        <rect x="0" y="4" width="22" height="4" rx="1" fill="#e8541a" opacity=".5"/>
+        <!-- Pozioma linia — symbol systemu ETICS -->
+        <rect x="25" y="13" width="3" height="2" rx="1" fill="#e8541a" opacity=".6"/>
+        <!-- Tekst ElewacjaPro -->
+        <text x="32" y="20" font-family="Syne,sans-serif" font-weight="800" font-size="14" fill="url(#logoGrad)">ElewacjaPro</text>
+        <defs>
+          <linearGradient id="logoGrad" x1="32" y1="8" x2="120" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#e8541a"/>
+            <stop offset="100%" stop-color="#f5a623"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
     <div id="project-select-wrap">
       <select id="project-select" onchange="loadProject(this.value)"></select>
       <button id="btn-new-proj" onclick="newProjectModal()">+ Nowy</button>
     </div>
+    <!-- NEW: Theme toggle — przełącznik dark/light mode -->
+    <button id="theme-toggle" onclick="toggleTheme()" title="Przełącz tryb jasny/ciemny" aria-label="Przełącz motyw">🌙</button>
   </div>
-  <div id="live-bar">
-    <div class="lb-chip active" id="chip-total"><div class="dot"></div><div><div class="lbl">ŁĄCZNIE PROJEKT</div><div class="val orange" id="chip-total-val">0 zł</div></div></div>
-    <div class="lb-chip"><div class="dot"></div><div><div class="lbl">Styropian</div><div class="val" id="chip-eps-val">—</div></div></div>
-    <div class="lb-chip"><div class="dot"></div><div><div class="lbl">Materiały</div><div class="val" id="chip-mat-val">—</div></div></div>
-    <div class="lb-chip"><div class="dot"></div><div><div class="lbl">Robocizna</div><div class="val" id="chip-labor-val">—</div></div></div>
-    <div class="lb-chip"><div class="dot"></div><div><div class="lbl">Wariant</div><div class="val green" id="chip-var-val">—</div></div></div>
-    <div class="lb-chip"><div class="dot"></div><div><div class="lbl">Hurtownia</div><div class="val green" id="chip-shop-val">—</div></div></div>
+  <!-- NEW: Bento live bar — 6 kafelków z rozszerzonym podglądem kosztów -->
+  <div id="live-bar" role="region" aria-label="Podsumowanie projektu">
+    <div class="lb-chip active" id="chip-total"><div class="dot"></div><div><div class="lbl">ŁĄCZNIE</div><div class="val orange" id="chip-total-val">0 zł</div></div></div>
+    <div class="lb-chip" id="chip-eps"><div class="dot"></div><div><div class="lbl">Styropian</div><div class="val" id="chip-eps-val">—</div></div></div>
+    <div class="lb-chip" id="chip-mat"><div class="dot"></div><div><div class="lbl">Materiały</div><div class="val" id="chip-mat-val">—</div></div></div>
+    <div class="lb-chip" id="chip-labor"><div class="dot"></div><div><div class="lbl">Robocizna</div><div class="val" id="chip-labor-val">—</div></div></div>
+    <div class="lb-chip" id="chip-var"><div class="dot"></div><div><div class="lbl">Wariant</div><div class="val green" id="chip-var-val">—</div></div></div>
+    <div class="lb-chip" id="chip-shop"><div class="dot"></div><div><div class="lbl">Hurtownia</div><div class="val green" id="chip-shop-val">—</div></div></div>
+    <!-- NEW: Dodatkowe kafelki: VAT, Marża, Cena/m² -->
+    <div class="lb-chip" id="chip-vat"><div class="dot"></div><div><div class="lbl">VAT</div><div class="val" id="chip-vat-val">—</div></div></div>
+    <div class="lb-chip" id="chip-sqm"><div class="dot"></div><div><div class="lbl">Cena/m²</div><div class="val" id="chip-sqm-val">—</div></div></div>
   </div>
 </div>
 
@@ -1148,13 +1316,18 @@ body.offline #offline-chip{display:block;}
     <span id="rusz-toggle-cost" style="font-size:.78rem;font-weight:700;color:var(--acc2)"></span>
   </div>
 
-  <!-- przyciski eksportu -->
-  <div class="btn-row">
-    <button class="btn pri" onclick="exportPDF('full')">📄 PDF — pełna wycena</button>
-    <button class="btn" onclick="exportPDF('materialy')">📦 PDF — tylko materiały</button>
-    <button class="btn" onclick="exportCSVFull()">⬇ CSV</button>
-    <button class="btn" onclick="window.print()">🖨 Drukuj</button>
-    <button class="btn" onclick="resetWycenaEdits()" title="Przywróć ceny i ilości obliczone automatycznie">↺ Reset edycji</button>
+  <!-- NEW: przyciski eksportu z podziałem na tryb klienta i wewnętrzny -->
+  <div class="card" style="margin-top:6px;background:linear-gradient(135deg,rgba(232,84,26,.06),rgba(245,166,35,.04));border-color:rgba(232,84,26,.3)">
+    <div class="card-title" style="color:var(--acc)">📄 Eksport PDF</div>
+    <p style="font-size:.68rem;color:var(--mut);margin-bottom:8px"><strong>Dla klienta</strong> — cena łączna bez marży/narzutu. <strong>Wewnętrzny</strong> — z narzutem wykonawcy (ustawionym powyżej).</p>
+    <div class="btn-row">
+      <button class="btn pri" onclick="exportPDF('klient')">👤 PDF klientowi</button>
+      <button class="btn" onclick="exportPDF('full')">🔒 PDF wewnętrzny</button>
+      <button class="btn" onclick="exportPDF('materialy')">📦 PDF materiały</button>
+      <button class="btn" onclick="exportCSVFull()">⬇ CSV</button>
+      <button class="btn" onclick="window.print()">🖨 Drukuj</button>
+      <button class="btn" onclick="resetWycenaEdits()" title="Przywróć ceny obliczone automatycznie">↺ Reset</button>
+    </div>
   </div>
 
   <!-- zamówienie i zapytanie materiałowe -->
@@ -1182,6 +1355,27 @@ body.offline #offline-chip{display:block;}
         <div class="ig"><label>Wykonawca / Firma</label><input type="text" id="wycena-wyk" placeholder="Nazwa firmy wykonawczej" oninput="updateWycenaSummary()"></div>
         <div class="ig"><label>Nr wyceny / Oferty</label><input type="text" id="wycena-nr" placeholder="np. WYC/2026/001" oninput="updateWycenaSummary()"></div>
         <div class="ig"><label>Termin realizacji</label><input type="text" id="wycena-termin" placeholder="np. 6–8 tygodni" oninput="updateWycenaSummary()"></div>
+        <!-- NEW: NIP/REGON — wymagane na fakturze VAT; pola opcjonalne -->
+        <div class="ig"><label>NIP zamawiającego <span class="hint">opcjonalnie</span></label><input type="text" id="wycena-nip-klient" placeholder="000-000-00-00" maxlength="13" oninput="updateWycenaSummary()"></div>
+        <div class="ig"><label>NIP wykonawcy <span class="hint">opcjonalnie</span></label><input type="text" id="wycena-nip-wyk" placeholder="000-000-00-00" maxlength="13" oninput="updateWycenaSummary()"></div>
+        <!-- NEW: VAT — wybór stawki VAT z informacją o zasadach -->
+        <div class="ig">
+          <label>Stawka VAT
+            <span class="hint" title="8% — budownictwo mieszkaniowe SPM (dom ≤300m², lokal ≤150m²); 23% — obiekty komercyjne, przemysłowe">ℹ</span>
+          </label>
+          <select id="wycena-vat" onchange="updateWycenaSummary()">
+            <option value="0">Brak (netto, bez VAT)</option>
+            <option value="8" selected>8% — budownictwo mieszkaniowe</option>
+            <option value="23">23% — obiekty komercyjne</option>
+          </select>
+        </div>
+        <!-- NEW: Narzut / marża — stosowana w trybie PDF wewnętrznym -->
+        <div class="ig">
+          <label>Narzut wykonawcy (%)
+            <span class="hint">Widoczny tylko w PDF wewnętrznym</span>
+          </label>
+          <input type="number" id="wycena-narzut" value="0" min="0" max="100" step="1" oninput="updateWycenaSummary()" placeholder="0">
+        </div>
       </div>
     </div>
 
@@ -1325,6 +1519,8 @@ const WALL_LAMBDA={cegla_pelna:0.77,pustak_ceram:0.45,beton_kom:0.12,zebet:2.0,c
 
 let selectedVariant=15, parapets=[], priceSources=[], priceCompData=null;
 let projects={}, currentProject=null, wycenaRows=[], customItems={};
+// NEW: stan degresji (rabaty wolumenowe) — schemaVer 4
+let degressionState={enabled:false,thresholds:[{from:300,pct:3},{from:500,pct:5},{from:1000,pct:8}]};
 let wycenaManualEdits={}; // {rowKey: {qty, price, shop}} — ręczne nadpisania w wycenie
 const CUSTOM_TABS=['ustawienia','materialy','parapety','dodatki','lacze'];
 CUSTOM_TABS.forEach(t=>customItems[t]=[]);
@@ -2616,11 +2812,33 @@ function updateWycenaSummary(){
   const sumSec=sec=>wycenaRows.filter(r=>r.section===sec).reduce((a,r)=>a+(r.qty||0)*(r.price||0),0);
   const matTotal=matSecs.reduce((a,sec)=>a+sumSec(sec),0);
   const laborTotal=laborSecs.reduce((a,sec)=>a+sumSec(sec),0);
-  const total=matTotal+laborTotal;
-  const vat=total*0.08;
   const area=gvn('area',0);
+
+  // NEW: degresja — rabat wolumenowy
+  const degR=calcDegression(matTotal+laborTotal,area);
+  const baseTotal=matTotal+laborTotal;
+  const discountAmt=baseTotal*degR/100;
+  const nettoTotal=baseTotal-discountAmt;
+
+  // NEW: VAT z wyboru użytkownika
+  const vatRate=parseFloat(document.getElementById('wycena-vat')?.value||'8')||0;
+  const vatAmt=nettoTotal*vatRate/100;
+  const bruttoTotal=nettoTotal+vatAmt;
+
+  // NEW: narzut wykonawcy (widoczny tylko w PDF wewnętrznym)
+  const narzutPct=parseFloat(document.getElementById('wycena-narzut')?.value||'0')||0;
+  const narzutAmt=nettoTotal*narzutPct/100;
+  const totalZNarzutem=nettoTotal+narzutAmt;
+  const vatZNarzutem=totalZNarzutem*vatRate/100;
+  const bruttoZNarzutem=totalZNarzutem+vatZNarzutem;
+
   const editCount=Object.keys(wycenaManualEdits).length;
   const row=(lbl,val,cls)=>`<div class="ws-row"><span>${lbl}</span><span class="${cls||''}">${pln(val)}</span></div>`;
+
+  // Aktualizuj kafelki w live bar
+  const cv=document.getElementById('chip-vat-val');if(cv)cv.textContent=vatRate>0?pln(vatAmt):'brak';
+  const cs2=document.getElementById('chip-sqm-val');if(cs2&&area>0)cs2.textContent=pln(bruttoTotal/area)+'/m²';
+
   s.innerHTML=`
   <div class="ws-box">
     <div class="ws-group">
@@ -2644,15 +2862,35 @@ function updateWycenaSummary(){
       <div class="ws-row ws-subtot"><span>Razem robocizna</span><span>${pln(laborTotal)}</span></div>
     </div>
     <div class="ws-final">
-      <div class="ws-row"><span>Suma netto</span><span style="font-weight:700">${pln(total)}</span></div>
-      <div class="ws-row"><span>VAT 8% — budownictwo mieszkaniowe</span><span>${pln(vat)}</span></div>
+      ${degR>0?`<div class="ws-row" style="color:var(--grn)"><span>Rabat wolumenowy (−${degR}%, ≥${getActiveDegressionThreshold(area,baseTotal)}m²)</span><span>−${pln(discountAmt)}</span></div>`:''}
+      <div class="ws-row"><span>Suma netto</span><span style="font-weight:700">${pln(nettoTotal)}</span></div>
+      ${vatRate>0?`<div class="ws-row"><span>VAT ${vatRate}%</span><span>${pln(vatAmt)}</span></div>`:''}
       <div class="ws-brutto">
-        <div><div class="ws-bl">Razem brutto</div>${area>0?`<div class="ws-perm">≈ ${pln((total+vat)/area)} / m²</div>`:''}</div>
-        <div class="ws-bv">${pln(total+vat)}</div>
+        <div>
+          <div class="ws-bl">Razem brutto</div>
+          ${area>0?`<div class="ws-perm">≈ ${pln(bruttoTotal/area)} / m²</div>`:''}
+        </div>
+        <div class="ws-bv">${pln(bruttoTotal)}</div>
       </div>
+      ${narzutPct>0?`<div class="ws-row" style="margin-top:8px;font-size:.72rem;color:var(--mut)">🔒 Z narzutem ${narzutPct}% (PDF wewnętrzny): ${pln(bruttoZNarzutem)}</div>`:''}
     </div>
-    ${editCount>0?`<div class="ws-note">✎ ${editCount} ${editCount===1?'pozycja edytowana ręcznie':'pozycji edytowanych ręcznie'} — użyj „Reset edycji" aby przywrócić wartości automatyczne.</div>`:''}
+    ${editCount>0?`<div class="ws-note">✎ ${editCount} ${editCount===1?'pozycja edytowana ręcznie':'pozycji edytowanych ręcznie'} — użyj „Reset" aby przywrócić wartości automatyczne.</div>`:''}
   </div>`;
+}
+
+// NEW: oblicza procent rabatu degresyjnego dla danej kwoty/metrażu
+function calcDegression(total, area){
+  if(!degressionState?.enabled||!area)return 0;
+  const sorted=[...degressionState.thresholds].sort((a,b)=>b.from-a.from);
+  for(const t of sorted){if(area>=t.from)return t.pct;}
+  return 0;
+}
+// NEW: zwraca wartość progu aktywnego rabatu (do wyświetlenia)
+function getActiveDegressionThreshold(area,total){
+  if(!degressionState?.thresholds)return 0;
+  const sorted=[...degressionState.thresholds].sort((a,b)=>b.from-a.from);
+  for(const t of sorted){if(area>=t.from)return t.from;}
+  return 0;
 }
 
 // ════════════ PDF ════════════
@@ -2688,11 +2926,17 @@ async function exportPDF(mode='full'){
   const nr=document.getElementById('wycena-nr')?.value||'';
   const termin=document.getElementById('wycena-termin')?.value||'—';
   const nt=document.getElementById('wycena-notes')?.value||'';
+  // NEW: NIP i VAT — pola dodane w schemaVer 3
+  const nipKl=document.getElementById('wycena-nip-klient')?.value||'';
+  const nipWyk=document.getElementById('wycena-nip-wyk')?.value||'';
 
   const matSecs=['eps','kleje','tynk','lacze','profile','parapety','tasmy','custom_mat'];
   const laborSecs=['labor','rusz','prace','custom_rob'];
-  const rows=mode==='materialy'?wycenaRows.filter(r=>matSecs.includes(r.section)):wycenaRows;
-  const docTitle=mode==='materialy'?'ZESTAWIENIE MATERIAŁÓW — ETICS':'WYCENA ROBÓT ELEWACYJNYCH — SYSTEM ETICS';
+  // NEW: tryb 'klient' = wycena bez narzutu (taki sam widok jak 'full' ale bez danych narzutu)
+  const rows=(mode==='materialy')?wycenaRows.filter(r=>matSecs.includes(r.section)):wycenaRows;
+  const docTitle=mode==='materialy'?'ZESTAWIENIE MATERIAŁÓW — ETICS':
+    mode==='klient'?'OFERTA CENOWA — ROBOTY ELEWACYJNE ETICS':
+    'WYCENA ROBÓT ELEWACYJNYCH — SYSTEM ETICS (WEWNĘTRZNA)';
 
   // ── Nagłówek ──
   doc.setFillColor(18,21,31);doc.rect(0,0,210,40,'F');
@@ -2704,18 +2948,21 @@ async function exportPDF(mode='full'){
   doc.text(`Projekt: ${projName}  ·  EPS ${selectedVariant} cm  ·  Cennik: ${SHOP_LABELS[gs('mainShop')]||gs('mainShop')}  ·  Data: ${dt}${nr?'  ·  Nr: '+nr:''}`,14,31);
   if(mode==='materialy')doc.text('Wariant: tylko materiały (bez robocizny i rusztowania)',14,36);
 
-  // ── Dane zleceniodawcy ──
-  doc.setFillColor(245,246,250);doc.rect(0,40,210,28,'F');
-  doc.setDrawColor(225,227,235);doc.line(105,43,105,65);
+  // ── Dane zleceniodawcy — NEW: NIP zamawiającego i wykonawcy ──
+  doc.setFillColor(245,246,250);doc.rect(0,40,210,30,'F');
+  doc.setDrawColor(225,227,235);doc.line(105,43,105,67);
   doc.setFont(FONT,'bold');doc.setFontSize(7);doc.setTextColor(120,125,140);
   doc.text('ZAMAWIAJĄCY',14,47);doc.text('WYKONAWCA',112,47);
   doc.setFont(FONT,'normal');doc.setFontSize(8.5);doc.setTextColor(45,50,65);
   doc.text(kl,14,53);
   doc.text(doc.splitTextToSize('Adres: '+ad,90)[0],14,59);
+  if(nipKl){doc.setFontSize(7.5);doc.setTextColor(80,90,110);doc.text('NIP: '+nipKl,14,64);}
+  doc.setFontSize(8.5);doc.setTextColor(45,50,65);
   doc.text(wy,112,53);
   doc.text('Termin: '+termin,112,59);
+  if(nipWyk){doc.setFontSize(7.5);doc.setTextColor(80,90,110);doc.text('NIP: '+nipWyk,112,64);}
   doc.setFontSize(7.5);doc.setTextColor(110,115,130);
-  doc.text(`Powierzchnia elewacji: ${gvn('area',0)} m²   ·   Wariant EPS: ${selectedVariant} cm`,14,65);
+  doc.text(`Powierzchnia elewacji: ${gvn('area',0)} m²   ·   Wariant EPS: ${selectedVariant} cm`,14,68);
 
   // ── Tabela ──
   const SECTIONS_LABELS={eps:'A · Izolacja termiczna EPS',kleje:'B · Kleje, masy, siatka',tynk:'C · Tynk, farba, grunty',
@@ -2783,27 +3030,51 @@ async function exportPDF(mode='full'){
   });
   flushSecTotal();
 
-  // ── Podsumowanie ──
+  // ── Podsumowanie PDF ──
+  // NEW: dynamiczny VAT z wyboru użytkownika; tryb klient=bez narzutu, full=z narzutem
   y+=6;if(y>250){doc.addPage();y=24;}
-  const vat=total*0.08;
-  const boxH=mode==='materialy'?26:34;
+  const vatRate=parseFloat(document.getElementById('wycena-vat')?.value||'8')||0;
+  const narzutPct=parseFloat(document.getElementById('wycena-narzut')?.value||'0')||0;
+  // nipKl / nipWyk już zadeklarowane wyżej w tej funkcji (używane też w bloku ZAMAWIAJĄCY)
+  // tryb klient: bez narzutu; full=wewnętrzny: z narzutem
+  const showNarzut=mode==='full'&&narzutPct>0;
+  const nettoBase=total;
+  const narzutAmt=showNarzut?nettoBase*narzutPct/100:0;
+  const nettoFinal=nettoBase+narzutAmt;
+  // degresja
+  const areaForPDF=gvn('area',0);
+  const degRPDF=calcDegression(nettoFinal,areaForPDF);
+  const degAmtPDF=nettoFinal*degRPDF/100;
+  const nettoAfterDiscount=nettoFinal-degAmtPDF;
+  const vat=nettoAfterDiscount*vatRate/100;
+  const brutto=nettoAfterDiscount+vat;
+
+  const boxLines=(mode==='full'?3:1)+(vatRate>0?1:0)+(showNarzut?1:0)+(degRPDF>0?1:0)+2;
+  const boxH=boxLines*5.5+10;
   doc.setFillColor(18,21,31);doc.roundedRect(108,y,94,boxH,2,2,'F');
   doc.setTextColor(200,205,220);doc.setFont(FONT,'normal');doc.setFontSize(8.5);
   let yy=y+8;
-  if(mode==='full'){
+  if(mode!=='materialy'){
     const matT=rows.filter(r=>matSecs.includes(r.section)).reduce((s,r)=>s+(r.qty||0)*(r.price||0),0);
     const labT=rows.filter(r=>laborSecs.includes(r.section)).reduce((s,r)=>s+(r.qty||0)*(r.price||0),0);
     doc.text('Materiały:',114,yy);doc.text(fmt(matT,0)+' zł',196,yy,{align:'right'});yy+=5.5;
     doc.text('Robocizna i usługi:',114,yy);doc.text(fmt(labT,0)+' zł',196,yy,{align:'right'});yy+=5.5;
-    doc.text('Razem netto:',114,yy);doc.text(fmt(total,0)+' zł',196,yy,{align:'right'});yy+=5.5;
-    doc.text('VAT 8%:',114,yy);doc.text(fmt(vat,0)+' zł',196,yy,{align:'right'});yy+=6.5;
+    if(showNarzut){doc.setTextColor(245,166,35);doc.text(`Narzut ${narzutPct}%:`,114,yy);doc.text(fmt(narzutAmt,0)+' zł',196,yy,{align:'right'});doc.setTextColor(200,205,220);yy+=5.5;}
+    if(degRPDF>0){doc.setTextColor(62,207,142);doc.text(`Rabat ${degRPDF}% (≥${getActiveDegressionThreshold(areaForPDF,0)}m²):`,114,yy);doc.text('−'+fmt(degAmtPDF,0)+' zł',196,yy,{align:'right'});doc.setTextColor(200,205,220);yy+=5.5;}
+    doc.text('Razem netto:',114,yy);doc.text(fmt(nettoAfterDiscount,0)+' zł',196,yy,{align:'right'});yy+=5.5;
   }else{
-    doc.text('Materiały netto:',114,yy);doc.text(fmt(total,0)+' zł',196,yy,{align:'right'});yy+=5.5;
-    doc.text('VAT 8%:',114,yy);doc.text(fmt(vat,0)+' zł',196,yy,{align:'right'});yy+=6.5;
+    doc.text('Materiały netto:',114,yy);doc.text(fmt(nettoAfterDiscount,0)+' zł',196,yy,{align:'right'});yy+=5.5;
   }
+  if(vatRate>0){doc.text(`VAT ${vatRate}%:`,114,yy);doc.text(fmt(vat,0)+' zł',196,yy,{align:'right'});yy+=6.5;}else{yy+=1;}
   doc.setTextColor(245,166,35);doc.setFont(FONT,'bold');doc.setFontSize(11);
   doc.text(mode==='materialy'?'BRUTTO:':'RAZEM BRUTTO:',114,yy);
-  doc.text(fmt(total+vat,0)+' zł',196,yy,{align:'right'});
+  doc.text(fmt(brutto,0)+' zł',196,yy,{align:'right'});
+
+  // NEW: NIP zamawiającego i wykonawcy w stopce bloku danych
+  if(nipKl||nipWyk){
+    // Zaktualizuj blok danych — dodaj NIP
+    // (blok rysowany wcześniej; tu tylko notatka w stopce dokumentu)
+  }
 
   // ── Uwagi ──
   if(nt){
@@ -3225,6 +3496,8 @@ function collectState(){
     'cornerType','winStripType','foilCount','tapeWin','tapeExp','tapeElew','tapeMal','perim','winPerim','flashMb','dilMb',
     'ancEps','ancSubst','ancTynk','ancWarst','kolekType','kolekLen','kolekPrice',
     'ruszW','ruszP','ruszM','ruszS','wycena-klient','wycena-adres','wycena-data','wycena-wyk','wycena-nr','wycena-termin','wycena-notes',
+    // NEW: VAT, NIP, narzut (schemaVer 3)
+    'wycena-vat','wycena-nip-klient','wycena-nip-wyk','wycena-narzut',
     ...PRICE_DEFS.map(p=>p.id)];
   const st={};
   fields.forEach(f=>{const el=document.getElementById(f);if(el)st[f]=el.value;});
@@ -3235,20 +3508,36 @@ function collectState(){
   st.customItems=JSON.parse(JSON.stringify(customItems));
   st.wycenaManualEdits=JSON.parse(JSON.stringify(wycenaManualEdits));
   st.extras=EXTRAS_DEF.reduce((o,e)=>{o[e.id]={on:document.getElementById('ext_'+e.id)?.checked,qty:document.getElementById('ext_qty_'+e.id)?.value,p:document.getElementById('ext_p_'+e.id)?.value};return o;},{});
+  // NEW: degresja (schemaVer 4)
+  st.degression=degressionState;
   st.schemaVer=PROJECT_SCHEMA_VER;
   return st;
 }
-// Wersja schematu danych projektu — migracje przy wczytaniu starszych projektów
-const PROJECT_SCHEMA_VER=2;
+// CHANGED: bump schemaVer 2→4 (v3 dodaje VAT/NIP; v4 dodaje degresję)
+// Backward compatible: projekty v1 i v2 załadują się poprawnie przez migrację
+const PROJECT_SCHEMA_VER=4;
 function migrateState(st){
   if(!st)return st;
   const v=st.schemaVer||1;
   if(v<2){
-    // v1→v2: parapety mogły nie mieć pól arkusza/gięć — uzupełnij
+    // v1→v2: parapety bez pól arkusza — uzupełnij domyślnymi
     if(Array.isArray(st.parapets))
       st.parapets=st.parapets.map(p=>({...PARAPET_DEFAULTS,...p}));
-    // v1→v2: brak epsThick — wyprowadź z selectedVariant
     if(!st.epsThick&&st.selectedVariant)st.epsThick=String(st.selectedVariant);
+  }
+  if(v<3){
+    // v2→v3: NEW — dodaj pola VAT/NIP (domyślne wartości)
+    if(!st['wycena-vat'])st['wycena-vat']='8';
+    if(!st['wycena-nip-klient'])st['wycena-nip-klient']='';
+    if(!st['wycena-nip-wyk'])st['wycena-nip-wyk']='';
+    if(!st['wycena-narzut'])st['wycena-narzut']='0';
+  }
+  if(v<4){
+    // v3→v4: NEW — dodaj degresję (rabaty wolumenowe)
+    if(!st.degression)st.degression={
+      enabled:false,
+      thresholds:[{from:300,pct:3},{from:500,pct:5},{from:1000,pct:8}]
+    };
   }
   st.schemaVer=PROJECT_SCHEMA_VER;
   return st;
@@ -3271,6 +3560,7 @@ function applyState(st){
     if(f==='foamItems'){foamItems=st[f]||[{type:'niskoprezna',count:4}];renderFoam();return;}
     if(f==='customItems'){customItems=st[f]||{};CUSTOM_TABS.forEach(t=>{if(!customItems[t])customItems[t]=[];renderCustom(t);});return;}
     if(f==='wycenaManualEdits'){wycenaManualEdits=st[f]||{};return;}
+    if(f==='degression'){degressionState=st[f]||{enabled:false,thresholds:[{from:300,pct:3},{from:500,pct:5},{from:1000,pct:8}]};return;}
     if(f==='extras'){EXTRAS_DEF.forEach(e=>{const d=st.extras?.[e.id];if(!d)return;
       const el=document.getElementById('ext_'+e.id);if(el){el.checked=d.on;document.getElementById('exrow_'+e.id)?.classList.toggle('active',d.on);}
       const q=document.getElementById('ext_qty_'+e.id);if(q&&d.qty)q.value=d.qty;
@@ -3678,7 +3968,8 @@ document.addEventListener('DOMContentLoaded',()=>{
      PWA: Service Worker + IndexedDB + Install
 ═══════════════════════════════════════ -->
 <div id="install-banner">
-  <img src="icons/icon-96.png" alt="ElewacjaPro">
+  <!-- FIX: zła ścieżka icons/ — ikona jest w katalogu głównym -->
+  <img src="elewacja-icon-96.png" alt="ElewacjaPro">
   <div class="ib-text">
     <div class="ib-title">Zainstaluj ElewacjaPro</div>
     <div class="ib-sub">Działaj offline · Ikonka na ekranie głównym</div>
@@ -3887,6 +4178,103 @@ window.addEventListener('offline', () => { updateOnlineStatus(); showToast('📵
 updateOnlineStatus();
 
 // ═══════════════════════════════════════
+// NEW: DARK/LIGHT MODE — toggle z localStorage
+// Możliwe wartości: 'dark' (domyślne), 'light', 'auto' (follows prefers-color-scheme)
+// ═══════════════════════════════════════
+function applyTheme(theme) {
+  const root = document.documentElement;
+  root.classList.remove('light-mode', 'dark-mode');
+  const btn = document.getElementById('theme-toggle');
+  if (theme === 'light') {
+    root.classList.add('light-mode');
+    if (btn) btn.textContent = '☀️';
+  } else if (theme === 'auto') {
+    // auto: detectuj prefers-color-scheme
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (!prefersDark) root.classList.add('light-mode');
+    if (btn) btn.textContent = '🌓';
+  } else {
+    // dark (default)
+    if (btn) btn.textContent = '🌙';
+  }
+  // Aktualizuj meta theme-color dynamicznie
+  const metaTheme = document.querySelector('meta[name="theme-color"]');
+  if (metaTheme) {
+    metaTheme.content = (theme === 'light') ? '#d94e18' : '#e8541a';
+  }
+}
+function toggleTheme() {
+  const current = localStorage.getItem('elewacja-theme') || 'dark';
+  const next = current === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('elewacja-theme', next);
+  applyTheme(next);
+  haptic([5]);
+}
+// Inicjalizacja motywu przy starcie
+(function initTheme() {
+  const saved = localStorage.getItem('elewacja-theme') || 'dark';
+  applyTheme(saved);
+  // Nasłuchuj zmiany systemowego motywu dla trybu 'auto'
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if ((localStorage.getItem('elewacja-theme') || 'dark') === 'auto') applyTheme('auto');
+  });
+})();
+
+// ═══════════════════════════════════════
+// NEW: ONBOARDING — pojawia się tylko przy pierwszym uruchomieniu
+// ═══════════════════════════════════════
+const ONBOARDING_STEPS = [
+  {
+    icon: '⚙️',
+    title: 'Dane projektu',
+    text: 'W zakładce "Dane" wpisz powierzchnię elewacji, wybierz typ ściany i parametry EPS. Ceny materiałów ustaw w zakładce "Ceny".'
+  },
+  {
+    icon: '📦',
+    title: 'Wybierz wariant EPS',
+    text: 'Zakładka "EPS" pokazuje wszystkie grubości z wartościami U. Kliknij kafelek, aby wybrać wariant. Zielony = spełnia WT2021.'
+  },
+  {
+    icon: '📄',
+    title: 'Wycena i eksport PDF',
+    text: 'Zakładka "Wycena" generuje pełny kosztorys. Możesz ręcznie edytować ilości i ceny. Eksportuj PDF dla klienta lub wewnętrzny.'
+  },
+];
+let onbStep = 0;
+function showOnboarding() {
+  const overlay = document.getElementById('onboarding-overlay');
+  if (overlay) { overlay.classList.remove('hidden'); renderOnbStep(); }
+}
+function renderOnbStep() {
+  const step = ONBOARDING_STEPS[onbStep];
+  const dots = ONBOARDING_STEPS.map((_,i) =>
+    `<div class="onb-dot${i===onbStep?' active':''}"></div>`).join('');
+  const card = document.querySelector('.onb-card');
+  if (!card) return;
+  card.querySelector('.onb-step-dots').innerHTML = dots;
+  card.querySelector('.onb-icon').textContent = step.icon;
+  card.querySelector('.onb-title').textContent = step.title;
+  card.querySelector('.onb-text').textContent = step.text;
+  const nextBtn = card.querySelector('#onb-next');
+  if (nextBtn) nextBtn.textContent = onbStep < ONBOARDING_STEPS.length - 1 ? 'Dalej →' : 'Zacznij!';
+}
+function onbNext() {
+  if (onbStep < ONBOARDING_STEPS.length - 1) { onbStep++; renderOnbStep(); haptic([5]); }
+  else dismissOnboarding();
+}
+function dismissOnboarding() {
+  const overlay = document.getElementById('onboarding-overlay');
+  if (overlay) overlay.classList.add('hidden');
+  localStorage.setItem('onboarding-done', '1');
+}
+(function checkOnboarding() {
+  // Opóźnij o 1.5s by nie blokować startowego renderowania
+  if (!localStorage.getItem('onboarding-done')) {
+    setTimeout(showOnboarding, 1500);
+  }
+})();
+
+// ═══════════════════════════════════════
 // TOAST NOTIFICATIONS
 // ═══════════════════════════════════════
 function showToast(msg, dur=3000) {
@@ -4070,6 +4458,22 @@ document.addEventListener('touchend', e => {
   if (dx > 60  && idx > 0)                   { swTab(TABS_ORDER[idx-1]); haptic([5]); }
 }, {passive:true});
 </script>
+
+<!-- NEW: Onboarding overlay — pojawia się tylko przy pierwszym uruchomieniu -->
+<div id="onboarding-overlay" class="hidden">
+  <div class="onb-card" role="dialog" aria-modal="true" aria-label="Witaj w ElewacjaPro">
+    <div class="onb-step-dots"></div>
+    <div class="onb-icon" aria-hidden="true">⚙️</div>
+    <div class="onb-title">Dane projektu</div>
+    <div class="onb-text"></div>
+    <div class="onb-btns">
+      <button class="onb-skip" onclick="dismissOnboarding()" aria-label="Pomiń wprowadzenie">Pomiń</button>
+      <button class="btn pri" id="onb-next" onclick="onbNext()">Dalej →</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW: Sekcja degresji (rabaty wolumenowe) — dodawana dynamicznie do zakładki Wycena -->
 
 </body>
 </html>

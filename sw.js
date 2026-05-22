@@ -1,13 +1,15 @@
-// ElewacjaPro Service Worker v5.0
-// Bez folderów icons/ — ikony są inline w manifest.json (data URI)
-const CACHE = 'elewacja-v5';
-const FONTS = 'elewacja-fonts-v5';
+// ElewacjaPro Service Worker v6.0
+// FIX: dodano pdf-font.js do CORE (offline PDF z polską czcionką wymagał sieciowego dostępu)
+// CHANGED: bump wersji cache elewacja-v6 by wymusić odświeżenie
+const CACHE = 'elewacja-v6';
+const FONTS = 'elewacja-fonts-v6';
 
-// Tylko pliki w katalogu głównym
+// Pliki do cache przy instalacji — CORE musi zawierać pdf-font.js dla offline PDF
 const CORE = [
   './',
   './index.html',
   './manifest.json',
+  './pdf-font.js',
 ];
 
 self.addEventListener('install', e => {
@@ -34,6 +36,7 @@ self.addEventListener('fetch', e => {
   if (url.protocol === 'chrome-extension:') return;
   if (url.hostname === 'api.anthropic.com') return;
 
+  // Fonty i CDN (Google Fonts, cdnjs, gstatic) — sieć najpierw, potem cache
   if (url.hostname.includes('fonts.') || url.hostname.includes('cdnjs.') || url.hostname.includes('gstatic.')) {
     e.respondWith(
       caches.open(FONTS).then(cache =>
@@ -49,6 +52,7 @@ self.addEventListener('fetch', e => {
     return;
   }
 
+  // Pozostałe zasoby — cache najpierw, fallback do sieci
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
@@ -58,6 +62,7 @@ self.addEventListener('fetch', e => {
         }
         return res;
       }).catch(() => {
+        // Fallback do index.html dla nawigacji HTML (tryb offline)
         if (e.request.headers.get('accept')?.includes('text/html')) {
           return caches.match('./index.html');
         }
