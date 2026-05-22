@@ -2265,27 +2265,39 @@ function parseCSVFile(e){
   r.onload=ev=>{
     let data=[];
     try{
-      // Auto-wykrycie separatora: średnik, przecinek lub tab
       const raw=ev.target.result.replace(/^\uFEFF/,'');
       const lines=raw.split(/\r?\n/).filter(l=>l.trim());
       if(!lines.length)throw new Error('pusty plik');
       const sep=lines[0].includes(';')?';':(lines[0].includes('\t')?'\t':',');
+      const hdr=lines[0].split(sep).map(h=>h.trim().toLowerCase());
+      // Wykryj format hurtowni: Kategoria;Producent;Nazwa produktu;Cena;Jednostka;...
+      const isHurtownia=hdr.length>=5&&(
+        hdr[0].includes('kategoria')||hdr[1].includes('producent')||
+        hdr[2].includes('nazwa')||hdr[3].includes('cena'));
       data=lines.slice(1).map(l=>{
         const c=l.split(sep);
-        const name=(c[0]||'').trim();
-        // sanityzacja: cena ≥0, skończona liczba
-        let price=parseFloat((c[1]||'0').replace(/\s/g,'').replace(',','.'));
+        let name,price,unit,cat='';
+        if(isHurtownia){
+          cat=(c[0]||'').trim();
+          name=((c[1]||'').trim()+' '+(c[2]||'').trim()).trim();
+          price=parseFloat((c[3]||'0').replace(/\s/g,'').replace(',','.'));
+          unit=(c[4]||'').trim();
+        }else{
+          name=(c[0]||'').trim();
+          price=parseFloat((c[1]||'0').replace(/\s/g,'').replace(',','.'));
+          unit=(c[2]||'').trim();
+        }
         if(!isFinite(price)||price<0)price=0;
-        return{name,price,unit:(c[2]||'').trim()};
-      }).filter(x=>x.name);
+        return{name,price,unit,cat};
+      }).filter(x=>x.name&&x.name.length>1);
     }catch(err){
       alert('Nie udało się odczytać pliku CSV: '+err.message+
-        '\n\nFormat: nazwa;cena;jednostka (pierwszy wiersz = nagłówek).');
+        '\n\nFormat: nazwa;cena;jednostka (pierwszy wiersz = nagłówek).\n'+
+        'Obsługiwany też format hurtowni: Kategoria;Producent;Nazwa;Cena;Jednostka;...');
       e.target.value='';return;
     }
     priceSources.push({id:Date.now(),type:'file',url:f.name,data});
     renderSources();
-    // Dopasuj do pól cennika i zaproponuj zastosowanie
     const applied=applyCSVToPriceGrid(data);
     alert(`Wgrano: ${f.name} (${data.length} pozycji).`+
       (applied?`\nDopasowano i zaktualizowano ${applied} cen w zakładce Ceny.`:
@@ -2293,37 +2305,80 @@ function parseCSVFile(e){
   };
   r.readAsText(f,'UTF-8');e.target.value='';
 }
-// Dopasowanie pozycji CSV do pól PRICE_DEFS po słowach kluczowych
+
+// Normalizuje cenę do jednostki bazowej na podstawie stringa jednostki
+function _csvNormPrice(price,unit){
+  const u=(unit||'').toLowerCase();
+  const m2=u.match(/\((\d+)\s*m2?\)/);  if(m2)return{v:price/parseFloat(m2[1]),u:'m²'};
+  const kg=u.match(/^(\d+)\s*kg$/);      if(kg)return{v:price/parseFloat(kg[1]),u:'kg'};
+  const kgP=u.match(/\((\d+)\s*kg\)/);  if(kgP)return{v:price/parseFloat(kgP[1]),u:'kg'};
+  const lt=u.match(/\((\d+)\s*l\)/);    if(lt)return{v:price/parseFloat(lt[1]),u:'l'};
+  const szt=u.match(/\((\d+)\s*szt\)/); if(szt)return{v:price/parseFloat(szt[1]),u:'szt'};
+  return{v:price,u:u};
+}
+
+// Dopasowanie pozycji CSV do pól PRICE_DEFS — obsługuje format hurtowni (cat) i prosty (name)
 function applyCSVToPriceGrid(data){
   const map=[
-    {kw:['styropian','eps'],f:'p_eps',perCm:true},
-    {kw:['klej','klejąca','klejaca'],f:'p_adhesive',div:25},
-    {kw:['zbrojąca','zbrojaca','szpachl'],f:'p_meshkg',div:25},
-    {kw:['siatka'],f:'p_mesh'},
-    {kw:['tynk'],f:'p_plaster',div:25},
-    {kw:['grunt'],f:'p_primer'},
-    {kw:['łącznik','lacznik','kołek','kolek'],f:'p_anchor'},
-    {kw:['zaślepk','zaslepk'],f:'p_cap'},
-    {kw:['listwa startowa','startowa'],f:'p_starter'},
-    {kw:['narożnik','naroznik'],f:'p_corner'},
-    {kw:['farba'],f:'p_paint'},
+    // Masa zbrojąca (klej do siatki) → p_meshkg (zł/kg) — TYLKO keyword, nie kategoria
+    {cats:[],kw:['do siatki','zbrojąca','zbrojaca','szpachlowa','szpachl'],f:'p_meshkg',
+      norm:(p,u)=>{const r=_csvNormPrice(p,u);return r.u==='kg'?r.v:p/25;}},
+    // Kleje do styropianu → p_adhesive (zł/kg); pianoklej/PU/MMA pomijane
+    {cats:['klej'],kw:['klej','klejąca','klejaca'],f:'p_adhesive',
+      norm:(p,u)=>{const r=_csvNormPrice(p,u);return r.u==='kg'?r.v:p/25;},
+      skip:['pianoklej','pukleber','to-kps','mma glue','turbo klej','szybkoschn','sylikon']},
+    // Siatka elewacyjna → p_mesh (zł/m²)
+    {cats:['siatka'],kw:['siatka'],f:'p_mesh',
+      norm:(p,u)=>{const r=_csvNormPrice(p,u);return r.u==='m²'?r.v:p/50;}},
+    // Grunt pod tynk → p_primer (zł/l) — wymaga keyword w nazwie
+    {cats:['tynk'],kw:['grunt'],f:'p_primer',
+      norm:(p,u)=>{const r=_csvNormPrice(p,u);return r.u==='l'?r.v:r.u==='kg'?r.v/0.5:p/10;}},
+    // Tynk elewacyjny → p_plaster (zł/kg)
+    {cats:['tynk'],kw:['tynk'],f:'p_plaster',
+      norm:(p,u)=>{const r=_csvNormPrice(p,u);return r.u==='kg'?r.v:p/25;},
+      skip:['grunt','mozaika','wyrówn','budomont']},
+    // Łączniki / kołki → p_anchor (zł/szt)
+    {cats:['akcesoria'],kw:['kołek','kolek','łącznik','lacznik'],f:'p_anchor',
+      norm:(p,u)=>{const r=_csvNormPrice(p,u);return r.u==='szt'?r.v:p/200;}},
+    // Zaślepki → p_cap (zł/szt)
+    {cats:['akcesoria'],kw:['zaślepk','zaslepk'],f:'p_cap',
+      norm:(p,u)=>{const r=_csvNormPrice(p,u);return r.u==='szt'?r.v:p/200;}},
+    // Listwa startowa → p_starter (zł/szt)
+    {cats:['akcesoria','profil'],kw:['listwa startowa','listwa star','startowa'],f:'p_starter',
+      norm:(p,u)=>p},
+    // Narożnik → p_corner (zł/mb)
+    {cats:['akcesoria'],kw:['narożnik','naroznik','kapinos'],f:'p_corner',
+      norm:(p,u)=>{const r=_csvNormPrice(p,u);return r.u==='szt'?r.v/2.5:r.v;}},
+    // Farba → p_paint (zł/l)
+    {cats:['farba','akcesoria'],kw:['farba'],f:'p_paint',
+      norm:(p,u)=>{const r=_csvNormPrice(p,u);return r.u==='kg'||r.u==='m²'?r.v:p/10;}},
+    // Styropian EPS: pomijamy auto-apply (cena za op bez znajomości m²/op)
   ];
-  let n=0;
+
+  // Zbierz najniższą cenę dla każdego pola (min ze wszystkich dopasowań)
+  const best={};
   data.forEach(it=>{
     if(!it.price)return;
-    const low=it.name.toLowerCase();
+    const nameLow=it.name.toLowerCase();
+    const catLow=(it.cat||'').toLowerCase();
     for(const m of map){
-      if(m.kw.some(k=>low.includes(k))){
-        const el=document.getElementById(m.f);
-        if(el){
-          let v=it.price;
-          if(m.div)v=it.price/m.div;            // cena za worek → za kg
-          if(m.perCm)v=it.price/15;              // cena za 15 cm m² → za cm
-          el.value=v.toFixed(2);n++;
-        }
-        break;
-      }
+      const catHit=m.cats&&m.cats.some(c=>catLow.includes(c));
+      const kwHit=m.kw.some(k=>nameLow.includes(k));
+      if(!catHit&&!kwHit)continue;
+      if(m.skip&&m.skip.some(s=>nameLow.includes(s)))continue;
+      if(m.f==='p_primer'&&!kwHit)continue;
+      if(m.f==='p_plaster'&&nameLow.includes('grunt'))continue;
+      const v=m.norm?m.norm(it.price,it.unit):it.price;
+      if(!isFinite(v)||v<=0)break;
+      if(!best[m.f]||v<best[m.f])best[m.f]=v;
+      break;
     }
+  });
+
+  let n=0;
+  Object.entries(best).forEach(([fId,v])=>{
+    const el=document.getElementById(fId);
+    if(el){el.value=v.toFixed(2);n++;}
   });
   if(n)calc();
   return n;
