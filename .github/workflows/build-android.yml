@@ -40,6 +40,9 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Akceptacja licencji Android SDK
         run: yes | sdkmanager --licenses 2>/dev/null || true
 
