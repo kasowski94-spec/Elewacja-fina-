@@ -1,13 +1,35 @@
-// ElewacjaPro Service Worker v5.0
-// Bez folderów icons/ — ikony są inline w manifest.json (data URI)
-const CACHE = 'elewacja-v5';
-const FONTS = 'elewacja-fonts-v5';
+// ElewacjaPro Service Worker v6.0 — ES module build
+const CACHE = 'elewacja-v6';
+const FONTS = 'elewacja-fonts-v6';
 
-// Tylko pliki w katalogu głównym
 const CORE = [
   './',
   './index.html',
   './manifest.json',
+  './src/main.js',
+  './src/styles/main.css',
+  './src/data/library.js',
+  './src/data/constants.js',
+  './src/utils/format.js',
+  './src/utils/dom.js',
+  './src/utils/math.js',
+  './src/utils/debounce.js',
+  './src/utils/download.js',
+  './src/store/state.js',
+  './src/services/storage.js',
+  './src/features/foam.js',
+  './src/features/parapets.js',
+  './src/features/extras.js',
+  './src/features/custom.js',
+  './src/features/anchors.js',
+  './src/features/library.js',
+  './src/features/prices.js',
+  './src/features/projects.js',
+  './src/features/wycena.js',
+  './src/features/calc.js',
+  './src/features/router.js',
+  './src/features/pdf.js',
+  './src/features/pwa.js',
 ];
 
 self.addEventListener('install', e => {
