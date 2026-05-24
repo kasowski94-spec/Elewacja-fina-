@@ -22,12 +22,15 @@ rsync -av \
 
 echo "==> Pobieranie jsPDF lokalnie (dla trybu offline)..."
 JSPDF_URL="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
-if [ ! -f "www/jspdf.min.js" ]; then
-  curl -fsSL "$JSPDF_URL" -o www/jspdf.min.js \
-    && echo "    jsPDF pobrane OK" \
-    || echo "    UWAGA: Nie udalo sie pobrac jsPDF — upewnij sie ze masz internet"
-else
-  echo "    jsPDF juz istnieje — pomijam"
-fi
+curl -fsSL "$JSPDF_URL" -o www/jspdf.min.js \
+  && echo "    jsPDF pobrane OK" \
+  || { echo "    BLAD: Nie udalo sie pobrac jsPDF"; exit 1; }
+
+echo "==> Patching www/index.html — zamiana CDN na lokalne pliki..."
+# Zamien blokujacy CDN jsPDF na lokalny plik (brak dostepu do sieci w WebView = timeout)
+sed -i 's|<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>|<script src="./jspdf.min.js"></script>|g' www/index.html
+# Google Fonts blokuje renderowanie bez internetu — usun (app uzywa fallback font)
+sed -i 's|<link href="https://fonts.googleapis.com/[^"]*" rel="stylesheet">||g' www/index.html
+echo "    Patching OK"
 
 echo "==> Gotowe! Uruchom: npx cap sync android"
