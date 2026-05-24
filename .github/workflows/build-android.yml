@@ -13,16 +13,6 @@ jobs:
       - name: Pobierz kod
         uses: actions/checkout@v4
 
-      - name: Diagnostyka srodowiska
-        run: |
-          echo "Node: $(node --version 2>/dev/null || echo brak)"
-          echo "NPM: $(npm --version 2>/dev/null || echo brak)"
-          echo "Java: $(java --version 2>/dev/null || echo brak)"
-          echo "ANDROID_SDK_ROOT: ${ANDROID_SDK_ROOT:-nieustawione}"
-          echo "ANDROID_HOME: ${ANDROID_HOME:-nieustawione}"
-          echo "rsync: $(rsync --version 2>/dev/null | head -1 || echo brak)"
-          ls -la
-
       - name: Konfiguracja Node.js 20
         uses: actions/setup-node@v4
         with:
@@ -40,15 +30,8 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Android SDK
+      - name: Konfiguracja Android SDK
         uses: android-actions/setup-android@v3
-
-      - name: Akceptacja licencji Android SDK
-        run: yes | sdkmanager --licenses 2>/dev/null || true
-
-      - name: Instalacja wymaganych komponentow Android SDK
-        run: |
-          sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
       - name: Dodaj platforme Android (Capacitor)
         run: npx cap add android
@@ -56,13 +39,11 @@ jobs:
       - name: Synchronizacja plikow web z projektem Android
         run: npx cap sync android
 
-      - name: Nadaj uprawnienia Gradle
-        run: chmod +x android/gradlew
-
       - name: Zbuduj APK debug
         run: |
           cd android
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
         env:
           GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx2048m"
 
