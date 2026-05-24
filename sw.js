@@ -6,6 +6,7 @@ const CORE = [
   './',
   './index.html',
   './manifest.json',
+  './jspdf.min.js',
   './src/main.js',
   './src/styles/main.css',
   './src/data/library.js',
