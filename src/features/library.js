@@ -36,7 +36,7 @@ export function renderLibCatFilter() {
   if (!el) return;
   if (libMode === 'fav') { el.innerHTML = ''; return; }
   const cats = getLibCats();
-  el.innerHTML = `<button class="lib-cat ${libCatActive === '' ? 'active' : ''}" onclick="window.setLibMode('');window.renderLibrary();window.renderLibCatFilter()">Wszystkie</button>` +
+  el.innerHTML = `<button class="lib-cat ${libCatActive === '' ? 'active' : ''}" onclick="window.filterLibCat('')">Wszystkie</button>` +
     Object.entries(cats).map(([k, v]) =>
       `<button class="lib-cat ${libCatActive === k ? 'active' : ''}" onclick="window.filterLibCat('${k}')">${v}</button>`
     ).join('');

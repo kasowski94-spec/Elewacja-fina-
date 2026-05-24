@@ -30,7 +30,7 @@ export function promptApiKey() {
 
 export function buildPricesGrid() {
   const g = document.getElementById('pricesGrid');
-  if (!g) return;
+  if (!g || document.getElementById('p_eps')) return;
   g.innerHTML = '';
   PRICE_DEFS.forEach(p => {
     const d = document.createElement('div');

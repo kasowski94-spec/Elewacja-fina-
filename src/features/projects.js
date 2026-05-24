@@ -1,6 +1,6 @@
 // ════════════ PROJEKTY ════════════
 
-import { CUSTOM_TABS, PROJECT_SCHEMA_VER, PARAPET_DEFAULTS } from '../data/constants.js';
+import { CUSTOM_TABS, PROJECT_SCHEMA_VER, PARAPET_DEFAULTS, THICK } from '../data/constants.js';
 import {
   projects, setProjects, currentProject, setCurrentProject,
   customItems, foamItems, setFoamItems, parapets, setParapets,
@@ -130,8 +130,8 @@ export function applyState(st) {
       return;
     }
     if (f === 'selectedVariant') {
-      const { THICK } = window.__AppData || {};
-      if (THICK) { const t = THICK.includes(st[f]) ? st[f] : 15; setSelectedVariant(t); }
+      const t = THICK.includes(st[f]) ? st[f] : 15;
+      setSelectedVariant(t);
       return;
     }
     if (f === 'parapets') {

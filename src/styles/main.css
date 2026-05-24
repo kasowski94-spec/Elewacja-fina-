@@ -325,7 +325,7 @@ table.t tr.rr td{background:rgba(232,84,26,.04);}
 .lib-info-note .price-date-label{color:var(--acc2);font-weight:600;}
 @media(max-width:380px){.lib-item{grid-template-columns:30px 1fr auto 36px;gap:8px;padding:12px 11px;}.lib-item-name{font-size:.86rem;}}
 
-#subtabs-bar{background:rgba(11,13,20,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--brd);overflow-x:auto;overflow-y:hidden;display:flex;gap:6px;padding:8px 12px;position:sticky;top:var(--topbar-h,93px);z-index:90;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+#subtabs-bar{background:rgba(11,13,20,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--brd);overflow-x:auto;overflow-y:hidden;display:flex;gap:6px;padding:8px 12px;position:sticky;top:var(--topbar-h,93px);z-index:90;-webkit-overflow-scrolling:touch;scrollbar-width:none;touch-action:pan-x;}
 #subtabs-bar::-webkit-scrollbar{display:none;}
 #subtabs-bar.hidden{display:none;}
 .stb{background:var(--card2);border:1px solid var(--brd);color:var(--mut);font-size:.72rem;font-weight:600;padding:7px 13px;border-radius:18px;white-space:nowrap;cursor:pointer;transition:all .15s;flex-shrink:0;display:inline-flex;align-items:center;gap:5px;}
@@ -363,7 +363,7 @@ body{padding-bottom:calc(80px + var(--safe-bot));padding-left:var(--safe-l);padd
 #update-banner.show{transform:translateY(0);}
 #offline-chip{position:fixed;top:6px;right:12px;z-index:450;background:var(--red);color:#fff;font-size:.65rem;font-weight:700;padding:3px 9px;border-radius:20px;display:none;letter-spacing:.05em;}
 body.offline #offline-chip{display:block;}
-#bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:150;background:rgba(13,15,21,.96);backdrop-filter:blur(16px);border-top:1px solid var(--brd);padding:6px 0 calc(6px + var(--safe-bot));display:flex;}
+#bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:150;background:rgba(13,15,21,.96);backdrop-filter:blur(16px);border-top:1px solid var(--brd);padding:6px 0 calc(6px + var(--safe-bot));display:flex;}
 .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 2px;background:none;border:none;color:var(--mut);font-size:.56rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;transition:color .2s;}
 .bn-item .bn-icon{font-size:1.2rem;line-height:1;}
 .bn-item.active{color:var(--acc);}
