@@ -7,8 +7,8 @@
   --font-head:'Syne',sans-serif;--font-body:'Inter',sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-html{scroll-behavior:smooth;}
-body{background:var(--bg);color:var(--txt);font-family:var(--font-body);min-height:100vh;font-size:14px;overflow-x:hidden;}
+html{scroll-behavior:smooth;overflow-x:hidden;}
+body{background:var(--bg);color:var(--txt);font-family:var(--font-body);min-height:100vh;font-size:14px;}
 input,select,button,textarea{font-family:var(--font-body);}
 button{cursor:pointer;}
 
