@@ -7,8 +7,8 @@
   --font-head:'Syne',sans-serif;--font-body:'Inter',sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-html{scroll-behavior:smooth;}
-body{background:var(--bg);color:var(--txt);font-family:var(--font-body);min-height:100vh;font-size:14px;overflow-x:hidden;}
+html{scroll-behavior:smooth;overflow-x:hidden;}
+body{background:var(--bg);color:var(--txt);font-family:var(--font-body);min-height:100vh;font-size:14px;}
 input,select,button,textarea{font-family:var(--font-body);}
 button{cursor:pointer;}
 
@@ -302,6 +302,8 @@ table.t tr.rr td{background:rgba(232,84,26,.04);}
 .lib-mode-btn{background:var(--card2);border:1px solid var(--brd);color:var(--txt);font-size:.86rem;font-weight:600;padding:14px 10px;border-radius:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .18s;min-height:54px;font-family:var(--font-head);letter-spacing:.01em;}
 .lib-mode-btn:active{transform:scale(.98);}
 .lib-mode-btn.active{background:linear-gradient(135deg,var(--acc),#d04618);color:#fff;border-color:var(--acc);box-shadow:0 4px 14px rgba(232,84,26,.35);}
+.lib-pmode-btn{background:var(--card2);border:1px solid var(--brd);color:var(--mut);font-size:.75rem;font-weight:600;padding:5px 14px;border-radius:8px;cursor:pointer;transition:all .15s;}
+.lib-pmode-btn.active{background:var(--acc2);color:#fff;border-color:var(--acc2);}
 .lib-search-card{background:var(--card2);border:1px solid var(--brd);border-radius:14px;padding:12px;margin-bottom:12px;}
 .lib-search-card input{width:100%;background:rgba(0,0,0,.25);border:1px solid var(--brd);border-radius:10px;color:var(--txt);font-size:.92rem;padding:11px 14px;outline:none;}
 .lib-search-card input:focus{border-color:var(--acc);}

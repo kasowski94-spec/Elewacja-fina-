@@ -292,6 +292,11 @@
     <button type="button" class="lib-mode-btn" id="libmode-rob" onclick="setLibMode('rob')">👷 Robocizna</button>
     <button type="button" class="lib-mode-btn" id="libmode-fav" onclick="setLibMode('fav')">⭐ Ulubione</button>
   </div>
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+    <span style="font-size:.75rem;color:var(--mut);font-weight:600">Ceny:</span>
+    <button type="button" class="lib-pmode-btn active" id="pricemode-netto" onclick="togglePriceMode('netto')">Netto</button>
+    <button type="button" class="lib-pmode-btn" id="pricemode-brutto" onclick="togglePriceMode('brutto')">Brutto +VAT</button>
+  </div>
 
   <!-- Wyszukiwarka + filtry kategorii -->
   <div class="lib-search-card">

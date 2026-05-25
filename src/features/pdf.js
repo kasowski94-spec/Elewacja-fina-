@@ -27,8 +27,26 @@ export function pdfFontName() {
   return (typeof PDF_FONT_REGULAR !== 'undefined') ? 'DejaVu' : 'helvetica';
 }
 
+async function savePDF(doc, filename) {
+  try {
+    if (navigator.share && typeof navigator.canShare === 'function') {
+      const blob = doc.output('blob');
+      const file = new File([blob], filename, { type: 'application/pdf' });
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: filename });
+        return;
+      }
+    }
+  } catch (e) {
+    if (e.name === 'AbortError') return;
+    console.warn('PDF share failed, fallback to save', e);
+  }
+  doc.save(filename);
+}
+
 export async function exportPDF(mode = 'full') {
-  if (typeof window.jspdf === 'undefined') { alert('jsPDF niedostępny — użyj drukowania.'); return; }
+  if (typeof window.jspdf === 'undefined') { window.showToast?.('jsPDF niedostępny — spróbuj ponownie') || alert('jsPDF niedostępny'); return; }
+  try {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
   registerPdfFont(doc);
@@ -170,7 +188,11 @@ export async function exportPDF(mode = 'full') {
   }
 
   const suffix = mode === 'materialy' ? '_MATERIALY' : '_WYCENA';
-  doc.save(`${projName.replace(/\s+/g, '_')}_EPS${selectedVariant}cm${suffix}.pdf`);
+  await savePDF(doc, `${projName.replace(/\s+/g, '_')}_EPS${selectedVariant}cm${suffix}.pdf`);
+  } catch (e) {
+    console.error('exportPDF error', e);
+    window.showToast?.('Błąd PDF: ' + e.message) || alert('Błąd PDF: ' + e.message);
+  }
 }
 
 export function buildOrderItems() {
@@ -180,13 +202,14 @@ export function buildOrderItems() {
     .map(r => ({ name: r.name.replace('◆ ', ''), unit: r.unit, qty: r.qty, price: r.price, total: (r.qty || 0) * (r.price || 0), section: r.section }));
 }
 
-export function exportOrderPDF(mode = 'order') {
-  if (typeof window.jspdf === 'undefined') { alert('jsPDF niedostępny.'); return; }
+export async function exportOrderPDF(mode = 'order') {
+  if (typeof window.jspdf === 'undefined') { window.showToast?.('jsPDF niedostępny — spróbuj ponownie') || alert('jsPDF niedostępny'); return; }
   const items = buildOrderItems();
   if (!items.length) {
-    alert('Brak pozycji materiałowych. Uzupełnij dane projektu, aby wygenerować ' + (mode === 'order' ? 'zamówienie' : 'zapytanie') + '.');
+    window.showToast?.('Brak pozycji materiałowych. Uzupełnij dane projektu.') || alert('Brak pozycji materiałowych.');
     return;
   }
+  try {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
   registerPdfFont(doc);
@@ -301,7 +324,11 @@ export function exportOrderPDF(mode = 'order') {
     doc.text(`ElewacjaPro · ${today} · ${isOrder ? 'Zamówienie materiałów' : 'Zapytanie ofertowe'} · ${docNo}`, 14, 292);
     doc.text(`Strona ${p} / ${pages}`, 196, 292, { align: 'right' });
   }
-  doc.save(`${projName.replace(/\s+/g, '_')}_${isOrder ? 'ZAMOWIENIE' : 'ZAPYTANIE'}.pdf`);
+  await savePDF(doc, `${projName.replace(/\s+/g, '_')}_${isOrder ? 'ZAMOWIENIE' : 'ZAPYTANIE'}.pdf`);
+  } catch (e) {
+    console.error('exportOrderPDF error', e);
+    window.showToast?.('Błąd PDF: ' + e.message) || alert('Błąd PDF: ' + e.message);
+  }
 }
 
 export function exportOrderCSV(mode = 'order') {
@@ -327,7 +354,7 @@ export function exportCSV() {
 
 export function exportCSVFull() {
   const h = ['Lp', 'Nazwa', 'Jedn', 'Ilosc', 'Cena', 'Hurtownia', 'Wartosc'];
-  const rows = wycenaRows.map(r => [r.lp, r.name, r.unit, r.qty, r.price.toFixed(2), r.shop, (r.qty * r.price).toFixed(2)]);
+  const rows = wycenaRows.map(r => [r.lp, r.name, r.unit, r.qty, (r.price || 0).toFixed(2), r.shop, ((r.qty || 0) * (r.price || 0)).toFixed(2)]);
   dl([h, ...rows].map(r => r.join(';')).join('\n'), 'wycena_pelna.csv');
 }
 

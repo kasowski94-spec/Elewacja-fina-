@@ -51,3 +51,7 @@ export const setLibPickerTarget = v => { libPickerTarget = v; };
 // Data ostatniej aktualizacji cennika
 export let lastPriceUpdate = null;
 export const setLastPriceUpdate = v => { lastPriceUpdate = v; };
+
+// Tryb wyświetlania cen biblioteki (netto / brutto)
+export let priceMode = 'netto';
+export const setPriceMode = v => { priceMode = v; };
