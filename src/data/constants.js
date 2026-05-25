@@ -95,8 +95,8 @@ export const PROJECT_SCHEMA_VER = 2;
 export const CUSTOM_TABS = ['ustawienia','materialy','parapety','dodatki','lacze'];
 
 export const TABS_ORDER = [
-  'ustawienia','warianty','materialy','biblioteka','parapety',
-  'dodatki','lacze','ceny','porownanie','wycena','rusztowanie',
+  'ustawienia','warianty','materialy','ceny','wycena',
+  'biblioteka','porownanie','parapety','lacze','dodatki','rusztowanie',
 ];
 
 // Mapowanie pól cen na pozycje z biblioteki materiałów / robocizny

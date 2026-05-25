@@ -190,13 +190,31 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Sync bottom nav with swTab
+  // Secondary tabs (not in main nav) map to their logical parent for nav highlight
+  const TAB_PARENT = {
+    porownanie: 'ceny',
+    biblioteka: null,   // null = highlight Więcej button
+    parapety: null,
+    dodatki: null,
+    lacze: null,
+    rusztowanie: null,
+  };
   const origSwTab = window.swTab;
   if (origSwTab) {
     window.swTab = function (name) {
       origSwTab(name);
-      const bnBtn = document.querySelector(`#bottom-nav .bn-item[data-tab="${name}"]`);
       document.querySelectorAll('.bn-item').forEach(b => b.classList.remove('active'));
-      if (bnBtn) bnBtn.classList.add('active');
+      const bnBtn = document.querySelector(`#bottom-nav .bn-item[data-tab="${name}"]`);
+      if (bnBtn) {
+        bnBtn.classList.add('active');
+      } else if (Object.prototype.hasOwnProperty.call(TAB_PARENT, name)) {
+        const parentTab = TAB_PARENT[name];
+        if (parentTab) {
+          document.querySelector(`#bottom-nav .bn-item[data-tab="${parentTab}"]`)?.classList.add('active');
+        } else {
+          document.getElementById('bn-more')?.classList.add('active');
+        }
+      }
       hideMore();
       window.scrollTo(0, 0);
     };

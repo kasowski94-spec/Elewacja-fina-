@@ -9,6 +9,14 @@ const SUBTABS_MAP = {
     { id: 'rob', label: 'Robocizna', emoji: '👷', type: 'mode' },
     { id: 'fav', label: 'Ulubione', emoji: '⭐', type: 'mode' },
   ],
+  materialy: [
+    { id: 'materialsSection', label: 'Zestawienie', emoji: '📋', type: 'anchor' },
+    { id: 'custom-materialy', label: 'Własne', emoji: '◆', type: 'anchor' },
+    { id: 'parapety', label: 'Parapety', emoji: '🪟', type: 'route' },
+    { id: 'lacze', label: 'Łączniki', emoji: '🔩', type: 'route' },
+    { id: 'dodatki', label: 'Prace dod.', emoji: '🔧', type: 'route' },
+    { id: 'rusztowanie', label: 'Rusztowanie', emoji: '🏗', type: 'route' },
+  ],
   wycena: [
     { id: 'wys-body-eps', label: 'EPS', emoji: '🧊', type: 'anchor' },
     { id: 'wys-body-kleje', label: 'Kleje', emoji: '🧪', type: 'anchor' },
@@ -24,13 +32,14 @@ const SUBTABS_MAP = {
   ],
   ceny: [
     { id: 'pricesGrid', label: 'Ceny ręczne', emoji: '💰', type: 'anchor' },
-    { id: 'laborLibList', label: 'Robocizna z biblioteki', emoji: '👷', type: 'anchor' },
-    { id: 'costSection', label: 'Koszty wariantu', emoji: '📦', type: 'anchor' },
-    { id: 'porownanie', label: 'Porównanie hurtowni', emoji: '📊', type: 'route' },
+    { id: 'laborLibList', label: 'Robocizna', emoji: '👷', type: 'anchor' },
+    { id: 'costSection', label: 'Wariant', emoji: '📦', type: 'anchor' },
+    { id: 'biblioteka', label: 'Biblioteka', emoji: '📚', type: 'route' },
+    { id: 'porownanie', label: 'Porównanie', emoji: '📊', type: 'route' },
   ],
   warianty: [
-    { id: 'cardsContainer', label: 'Karty wariantów', emoji: '📦', type: 'anchor' },
-    { id: 'costTableBody', label: 'Tabela kosztów', emoji: '📋', type: 'anchor' },
+    { id: 'cardsContainer', label: 'Karty EPS', emoji: '📦', type: 'anchor' },
+    { id: 'costTableBody', label: 'Tabela', emoji: '📋', type: 'anchor' },
   ],
   lacze: [
     { id: 'anchorResult', label: 'Kalkulator', emoji: '🧮', type: 'anchor' },
