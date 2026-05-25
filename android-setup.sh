@@ -6,6 +6,15 @@ echo "==> Tworzenie katalogu www/..."
 rm -rf www
 mkdir -p www
 
+echo "==> Budowanie bundla JS (esbuild — kompatybilnosc z Android WebView)..."
+./node_modules/.bin/esbuild src/main.js \
+  --bundle \
+  --outfile=www/app-bundle.js \
+  --format=iife \
+  --platform=browser \
+  && echo "    Bundle OK" \
+  || { echo "    BLAD: esbuild nie powiodlo sie"; exit 1; }
+
 echo "==> Kopiowanie plikow web..."
 rsync -av \
   --exclude='node_modules/' \
@@ -32,5 +41,10 @@ sed -i 's|<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/
 # Google Fonts blokuje renderowanie bez internetu — usun (app uzywa fallback font)
 sed -i 's|<link href="https://fonts.googleapis.com/[^"]*" rel="stylesheet">||g' www/index.html
 echo "    Patching OK"
+
+echo "==> Patching www/index.html — zamiana module script na bundle..."
+# Android WebView moze nie obslugiwac ES modules — uzywamy bundla IIFE
+sed -i 's|<script type="module" src="src/main.js"></script>|<script src="app-bundle.js"></script>|g' www/index.html
+echo "    Module -> Bundle OK"
 
 echo "==> Gotowe! Uruchom: npx cap sync android"
