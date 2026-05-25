@@ -1,6 +1,6 @@
 // ════════════ WŁASNE POZYCJE ════════════
 
-import { CUSTOM_TABS, COMMON_ITEMS } from '../data/constants.js';
+import { CUSTOM_TABS } from '../data/constants.js';
 import { customItems } from '../store/state.js';
 import { pln } from '../utils/format.js';
 
