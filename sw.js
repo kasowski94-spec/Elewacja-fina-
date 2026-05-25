@@ -1,6 +1,6 @@
-// ElewacjaPro Service Worker v6.0 — ES module build
-const CACHE = 'elewacja-v6';
-const FONTS = 'elewacja-fonts-v6';
+// ElewacjaPro Service Worker v8.0
+const CACHE = 'elewacja-v8';
+const FONTS = 'elewacja-fonts-v8';
 
 const CORE = [
   './',

@@ -28,6 +28,29 @@ export function pdfFontName() {
 }
 
 async function savePDF(doc, filename) {
+  // ── Ścieżka 1: Capacitor native Android/iOS ──────────────────
+  if (window.Capacitor?.isNativePlatform?.()) {
+    const FS = window.Capacitor?.Plugins?.Filesystem;
+    const SH = window.Capacitor?.Plugins?.Share;
+    if (FS && SH) {
+      try {
+        const base64 = doc.output('datauristring').split(',')[1];
+        await FS.writeFile({ path: filename, data: base64, directory: 'CACHE' });
+        const { uri } = await FS.getUri({ path: filename, directory: 'CACHE' });
+        await SH.share({ title: filename, url: uri, dialogTitle: 'Zapisz lub udostępnij PDF' });
+        return;
+      } catch (e) {
+        const msg = (e?.message || '').toLowerCase();
+        if (msg.includes('cancel') || msg.includes('dismiss') || msg.includes('abort')) return;
+        console.error('Capacitor PDF share error:', e);
+        window.showToast?.('Błąd zapisu PDF: ' + (e?.message || e));
+        return;
+      }
+    }
+    // Pluginy niezainstalowane — fallback do Web Share
+  }
+
+  // ── Ścieżka 2: Web Share API z plikiem (Android 10+, Chrome 86+) ─
   try {
     if (navigator.share && typeof navigator.canShare === 'function') {
       const blob = doc.output('blob');
@@ -39,8 +62,10 @@ async function savePDF(doc, filename) {
     }
   } catch (e) {
     if (e.name === 'AbortError') return;
-    console.warn('PDF share failed, fallback to save', e);
+    console.warn('Web Share failed, next fallback', e);
   }
+
+  // ── Ścieżka 3: doc.save() — przeglądarka desktopowa ──────────
   doc.save(filename);
 }
 
