@@ -13,10 +13,10 @@ jobs:
       - name: Pobierz kod
         uses: actions/checkout@v4
 
-      - name: Konfiguracja Node.js 20
+      - name: Konfiguracja Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Instalacja zaleznosci Capacitor
@@ -31,11 +31,11 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Akceptacja licencji Android SDK
-        run: yes | sdkmanager --licenses 2>/dev/null || true
-
-      - name: Instalacja wymaganych komponentow Android SDK
-        run: sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+      - name: Konfiguracja Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
+          accept-android-sdk-licenses: true
 
       - name: Dodaj platforme Android (Capacitor)
         run: npx cap add android
