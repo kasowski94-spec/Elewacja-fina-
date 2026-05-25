@@ -36,6 +36,7 @@
     <div class="lb-chip"><div class="dot"></div><div><div class="lbl">Materiały</div><div class="val" id="chip-mat-val">—</div></div></div>
     <div class="lb-chip"><div class="dot"></div><div><div class="lbl">Robocizna</div><div class="val" id="chip-labor-val">—</div></div></div>
     <div class="lb-chip"><div class="dot"></div><div><div class="lbl">Wariant</div><div class="val green" id="chip-var-val">—</div></div></div>
+    <div class="lb-chip"><div class="dot"></div><div><div class="lbl">EPS m³</div><div class="val" id="chip-eps-m3-val">—</div></div></div>
     <div class="lb-chip"><div class="dot"></div><div><div class="lbl">Hurtownia</div><div class="val green" id="chip-shop-val">—</div></div></div>
   </div>
 </div>
@@ -650,6 +651,20 @@
 
   <div class="card" style="margin-top:10px">
     <div class="card-title">Podsumowanie wyceny</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="font-size:.72rem;color:var(--mut);font-weight:600">Ceny:</span>
+        <button type="button" class="lib-pmode-btn active" id="wycena-vat-netto" onclick="toggleWycenaVat('netto')">Netto</button>
+        <button type="button" class="lib-pmode-btn" id="wycena-vat-brutto" onclick="toggleWycenaVat('brutto')">Brutto +VAT</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
+        <span style="font-size:.72rem;color:var(--mut);font-weight:600">Narzut dla klienta:</span>
+        <input type="number" id="client-margin-input" value="0" min="0" max="200" step="1"
+          style="width:58px;padding:4px 7px;border-radius:7px;border:1px solid var(--brd);background:var(--card2);color:var(--txt);font-size:.79rem;text-align:center"
+          oninput="updClientMargin(+this.value)">
+        <span style="font-size:.72rem;color:var(--mut)">%</span>
+      </div>
+    </div>
     <div id="wycena-summary"></div>
   </div>
 </div>

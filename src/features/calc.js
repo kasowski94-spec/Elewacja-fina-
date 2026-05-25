@@ -102,6 +102,8 @@ export function calc() {
   document.getElementById('chip-labor-val').textContent = pln(laborCost);
   document.getElementById('chip-var-val').textContent = selectedVariant + ' cm';
   document.getElementById('chip-shop-val').textContent = SHOP_LABELS[gs('mainShop')] || gs('mainShop') || '—';
+  const m3El = document.getElementById('chip-eps-m3-val');
+  if (m3El) m3El.textContent = fmt(aW * selectedVariant / 100, 2) + ' m³';
 
   // VARIANT CARDS
   const cc = document.getElementById('cardsContainer');

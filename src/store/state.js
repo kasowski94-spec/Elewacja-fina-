@@ -55,3 +55,9 @@ export const setLastPriceUpdate = v => { lastPriceUpdate = v; };
 // Tryb wyświetlania cen biblioteki (netto / brutto)
 export let priceMode = 'netto';
 export const setPriceMode = v => { priceMode = v; };
+
+// Wycena — tryb VAT i narzut dla klienta
+export let wycenaVatMode = 'netto';
+export const setWycenaVatMode = v => { wycenaVatMode = v; };
+export let clientMargin = 0;
+export const setClientMargin = v => { clientMargin = Math.max(0, Math.min(200, +v || 0)); };

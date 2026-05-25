@@ -261,6 +261,8 @@ table.t tr.rr td{background:rgba(232,84,26,.04);}
 .ws-perm{font-size:.64rem;color:var(--mut);margin-top:2px;}
 .ws-bv{font-family:var(--font-head);font-size:1.7rem;font-weight:800;color:var(--acc2);line-height:1;}
 .ws-note{font-size:.65rem;color:var(--acc2);background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.25);border-radius:8px;padding:7px 10px;line-height:1.5;}
+.ws-panel-label{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--mut);padding:4px 0 6px;border-top:1px solid var(--brd);margin-top:4px;}
+.ws-panel-label-client{color:var(--grn);border-color:rgba(62,207,142,.35);}
 
 .sub-row{background:var(--card2);border:1px solid var(--brd);border-radius:var(--r);padding:11px;margin-bottom:8px;position:relative;}
 .sub-del{position:absolute;top:7px;right:7px;background:none;border:none;color:var(--mut);font-size:1rem;padding:2px 6px;border-radius:5px;}
