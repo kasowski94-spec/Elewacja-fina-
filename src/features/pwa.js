@@ -99,9 +99,9 @@ document.addEventListener('touchend', e => {
   if (!e.changedTouches[0]) return;
   const dx = e.changedTouches[0].clientX - touchStartX;
   const dy = e.changedTouches[0].clientY - touchStartY;
-  if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx)) return;
+  if (Math.abs(dx) < 60 || Math.abs(dy) > Math.abs(dx)) return;
   const target = e.target;
-  if (target.closest('input,select,textarea,.wr,.we-row,#subtabs-bar,#live-bar')) return;
+  if (target.closest('input,select,textarea,.wr,.we-row,#subtabs-bar,#live-bar,#bottom-nav')) return;
   const active = document.querySelector('.tab-panel.active');
   if (!active) return;
   const cur = active.id.replace('tab-', '');

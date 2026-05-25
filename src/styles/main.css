@@ -364,7 +364,7 @@ body{padding-bottom:calc(80px + var(--safe-bot));padding-left:var(--safe-l);padd
 #offline-chip{position:fixed;top:6px;right:12px;z-index:450;background:var(--red);color:#fff;font-size:.65rem;font-weight:700;padding:3px 9px;border-radius:20px;display:none;letter-spacing:.05em;}
 body.offline #offline-chip{display:block;}
 #bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:150;background:rgba(13,15,21,.96);backdrop-filter:blur(16px);border-top:1px solid var(--brd);padding:6px 0 calc(6px + var(--safe-bot));display:flex;}
-.bn-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 2px;background:none;border:none;color:var(--mut);font-size:.56rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;transition:color .2s;}
+.bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:8px 2px;min-height:48px;background:none;border:none;color:var(--mut);font-size:.56rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;transition:color .2s;}
 .bn-item .bn-icon{font-size:1.2rem;line-height:1;}
 .bn-item.active{color:var(--acc);}
 .swipe-hint{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:32px;height:3px;background:var(--mut);border-radius:3px;opacity:.4;}

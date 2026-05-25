@@ -28,7 +28,7 @@ curl -fsSL "$JSPDF_URL" -o www/jspdf.min.js \
 
 echo "==> Patching www/index.html — zamiana CDN na lokalne pliki..."
 # Zamien blokujacy CDN jsPDF na lokalny plik (brak dostepu do sieci w WebView = timeout)
-sed -i 's|<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>|<script src="./jspdf.min.js"></script>|g' www/index.html
+sed -i 's|<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>|<script defer src="./jspdf.min.js"></script>|g' www/index.html
 # Google Fonts blokuje renderowanie bez internetu — usun (app uzywa fallback font)
 sed -i 's|<link href="https://fonts.googleapis.com/[^"]*" rel="stylesheet">||g' www/index.html
 echo "    Patching OK"
