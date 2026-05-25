@@ -14,11 +14,15 @@ function vatFor(isLabor) { return priceMode === 'brutto' ? (isLabor ? 1.23 : 1.0
 
 export function togglePriceMode(mode) {
   setPriceMode(mode);
-  document.querySelectorAll('.lib-pmode-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('pricemode-' + mode)?.classList.add('active');
+  // Synchronizuj wszystkie przyciski pricemode-* (zakładka Dane + Biblioteka)
+  document.querySelectorAll('[id^="pricemode-"]').forEach(b =>
+    b.classList.toggle('active', b.id === 'pricemode-' + mode)
+  );
   const note = document.querySelector('.lib-info-note');
   if (note) note.dataset.priceMode = mode;
   renderLibrary();
+  window.buildWycenaRows?.();
+  window.calc?.();
 }
 
 export function initLibMode(mode) {

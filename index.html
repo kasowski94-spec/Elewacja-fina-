@@ -86,6 +86,14 @@
         </select>
         <span class="hint w">Globalna — pojedyncze pozycje nadpiszesz w Wycenie</span>
       </div>
+      <div class="ig">
+        <label>Tryb cen VAT</label>
+        <div style="display:flex;gap:6px;margin-top:4px">
+          <button type="button" class="lib-pmode-btn active" id="pricemode-netto" onclick="togglePriceMode('netto')">Netto</button>
+          <button type="button" class="lib-pmode-btn" id="pricemode-brutto" onclick="togglePriceMode('brutto')">Brutto +VAT</button>
+        </div>
+        <span class="hint w">Wpływa na bibliotekę i całą wycenę</span>
+      </div>
     </div>
   </div>
 
@@ -651,19 +659,12 @@
 
   <div class="card" style="margin-top:10px">
     <div class="card-title">Podsumowanie wyceny</div>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
-      <div style="display:flex;align-items:center;gap:6px">
-        <span style="font-size:.72rem;color:var(--mut);font-weight:600">Ceny:</span>
-        <button type="button" class="lib-pmode-btn active" id="wycena-vat-netto" onclick="toggleWycenaVat('netto')">Netto</button>
-        <button type="button" class="lib-pmode-btn" id="wycena-vat-brutto" onclick="toggleWycenaVat('brutto')">Brutto +VAT</button>
-      </div>
-      <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
-        <span style="font-size:.72rem;color:var(--mut);font-weight:600">Narzut dla klienta:</span>
-        <input type="number" id="client-margin-input" value="0" min="0" max="200" step="1"
-          style="width:58px;padding:4px 7px;border-radius:7px;border:1px solid var(--brd);background:var(--card2);color:var(--txt);font-size:.79rem;text-align:center"
-          oninput="updClientMargin(+this.value)">
-        <span style="font-size:.72rem;color:var(--mut)">%</span>
-      </div>
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:14px">
+      <span style="font-size:.72rem;color:var(--mut);font-weight:600">Narzut dla klienta:</span>
+      <input type="number" id="client-margin-input" value="0" min="0" max="200" step="1"
+        style="width:58px;padding:4px 7px;border-radius:7px;border:1px solid var(--brd);background:var(--card2);color:var(--txt);font-size:.79rem;text-align:center"
+        oninput="updClientMargin(+this.value)">
+      <span style="font-size:.72rem;color:var(--mut)">%</span>
     </div>
     <div id="wycena-summary"></div>
   </div>

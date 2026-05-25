@@ -3,7 +3,7 @@
 import { EXTRAS_DEF, FOAM_TYPES, CORNER_MULT, SHOP_MULT, SHOP_LABELS, SHEET_TYPES } from '../data/constants.js';
 import { parapetCalc } from './parapets.js';
 import { getAllCustomItems } from './custom.js';
-import { wycenaRows, setWycenaRows, wycenaManualEdits, setWycenaManualEdits, selectedVariant, wycenaVatMode, setWycenaVatMode, clientMargin, setClientMargin } from '../store/state.js';
+import { wycenaRows, setWycenaRows, wycenaManualEdits, setWycenaManualEdits, selectedVariant, priceMode, clientMargin, setClientMargin } from '../store/state.js';
 import { gv, gs, gvn, gsn } from '../utils/dom.js';
 import { fmt, pln } from '../utils/format.js';
 
@@ -38,6 +38,7 @@ export function buildWycenaRows() {
     else if (opts.noShop) price = gv(baseId);
     else price = gv(baseId) * (effShop === 'reczne' ? 1 : (SHOP_MULT[effShop] || 1));
     if (extraMult && typeof extraMult === 'number') price *= extraMult;
+    if (priceMode === 'brutto') price *= opts.noShop ? 1.23 : 1.08;
     return {
       name, unit, qty: +(+qty).toFixed(2), price: +price.toFixed(2),
       shop: opts.noShop ? '—' : effShop, section: section || 'eps', desc: desc || '', key: opts.key || null,
@@ -271,13 +272,6 @@ export function scheduleWycenaSave() {
   }, 800);
 }
 
-export function toggleWycenaVat(mode) {
-  setWycenaVatMode(mode);
-  document.getElementById('wycena-vat-netto')?.classList.toggle('active', mode === 'netto');
-  document.getElementById('wycena-vat-brutto')?.classList.toggle('active', mode === 'brutto');
-  updateWycenaSummary();
-}
-
 export function updClientMargin(v) {
   setClientMargin(v);
   const inp = document.getElementById('client-margin-input');
@@ -291,57 +285,59 @@ export function updateWycenaSummary() {
   const matSecs = ['eps', 'kleje', 'tynk', 'lacze', 'profile', 'parapety', 'tasmy', 'custom_mat'];
   const laborSecs = ['labor', 'rusz', 'prace', 'custom_rob'];
   const sumSec = sec => wycenaRows.filter(r => r.section === sec).reduce((a, r) => a + (r.qty || 0) * (r.price || 0), 0);
-  const matNetto = matSecs.reduce((a, sec) => a + sumSec(sec), 0);
-  const laborNetto = laborSecs.reduce((a, sec) => a + sumSec(sec), 0);
-  const totalNetto = matNetto + laborNetto;
-  const vatMat = matNetto * 0.08;
-  const vatLab = laborNetto * 0.23;
-  const totalBrutto = totalNetto + vatMat + vatLab;
+  const matTotal = matSecs.reduce((a, sec) => a + sumSec(sec), 0);
+  const laborTotal = laborSecs.reduce((a, sec) => a + sumSec(sec), 0);
+  const grandTotal = matTotal + laborTotal;
 
+  const isBrutto = priceMode === 'brutto';
   const area = gvn('area', 0);
   const editCount = Object.keys(wycenaManualEdits).length;
-  const isVat = wycenaVatMode === 'brutto';
   const margin = clientMargin / 100;
 
-  const clientMatNetto = matNetto * (1 + margin);
-  const clientLabNetto = laborNetto * (1 + margin);
-  const clientTotalNetto = totalNetto * (1 + margin);
-  const clientVatMat = clientMatNetto * 0.08;
-  const clientVatLab = clientLabNetto * 0.23;
-  const clientTotalBrutto = clientTotalNetto + clientVatMat + clientVatLab;
-  const profit = totalNetto * margin;
+  // W trybie netto: ceny w wierszach są netto → oblicz brutto do wyświetlenia
+  const matBrutto = isBrutto ? matTotal : matTotal * 1.08;
+  const laborBrutto = isBrutto ? laborTotal : laborTotal * 1.23;
+  const grandBrutto = matBrutto + laborBrutto;
 
-  const dispInt = isVat ? totalBrutto : totalNetto;
-  const dispClient = isVat ? clientTotalBrutto : clientTotalNetto;
+  // Cena klienta (narzut od cen wierszy) + ewentualny VAT jeśli tryb netto
+  const clientTotal = grandTotal * (1 + margin);
+  const clientBrutto = isBrutto ? clientTotal : clientTotal * 1.08 * (matTotal / grandTotal || 0.85) + clientTotal * 1.23 * (laborTotal / grandTotal || 0.15);
+  const profit = grandTotal * margin;
+
+  const dispPerM2 = area > 0 ? pln(grandBrutto / area) + ' / m²' : '';
+  const clientPerM2 = area > 0 ? pln((isBrutto ? clientTotal : clientTotal + clientTotal * 0.08) / area) + ' / m²' : '';
 
   const row = (lbl, val, cls) => `<div class="ws-row"><span>${lbl}</span><span class="${cls || ''}">${pln(val)}</span></div>`;
+
+  const vatBlock = isBrutto ? '' : `
+    <div class="ws-row"><span>VAT materiały 8%</span><span>${pln(matTotal * 0.08)}</span></div>
+    <div class="ws-row"><span>VAT robocizna 23%</span><span>${pln(laborTotal * 0.23)}</span></div>`;
 
   const clientPanel = clientMargin > 0 ? `
     <div class="ws-panel-label ws-panel-label-client">🧾 Oferta dla klienta — narzut ${clientMargin}%</div>
     <div class="ws-group">
-      <div class="ws-gtitle">Kalkulacja cenowa</div>
-      ${row('Materiały budowlane netto', clientMatNetto)}
-      ${row('Robocizna i usługi netto', clientLabNetto)}
-      <div class="ws-row ws-subtot"><span>Razem netto klienta</span><span>${pln(clientTotalNetto)}</span></div>
+      <div class="ws-gtitle">Kalkulacja cenowa ${isBrutto ? '(ceny brutto)' : '(ceny netto)'}</div>
+      ${row('Materiały budowlane', matTotal * (1 + margin))}
+      ${row('Robocizna i usługi', laborTotal * (1 + margin))}
+      <div class="ws-row ws-subtot"><span>Suma klienta</span><span>${pln(clientTotal)}</span></div>
     </div>
     <div class="ws-final" style="border-color:rgba(62,207,142,.45);background:linear-gradient(135deg,rgba(62,207,142,.08),rgba(62,207,142,.02))">
-      <div class="ws-row"><span>Suma netto klienta</span><span style="font-weight:700">${pln(clientTotalNetto)}</span></div>
-      ${isVat ? `
-        <div class="ws-row"><span>VAT materiały 8%</span><span>${pln(clientVatMat)}</span></div>
-        <div class="ws-row"><span>VAT robocizna 23%</span><span>${pln(clientVatLab)}</span></div>` : ''}
+      ${isBrutto ? '' : `
+        <div class="ws-row"><span>VAT materiały 8%</span><span>${pln(matTotal * (1 + margin) * 0.08)}</span></div>
+        <div class="ws-row"><span>VAT robocizna 23%</span><span>${pln(laborTotal * (1 + margin) * 0.23)}</span></div>`}
       <div class="ws-brutto" style="border-color:var(--grn)">
         <div>
-          <div class="ws-bl" style="color:var(--grn)">${isVat ? 'Oferta brutto' : 'Oferta netto'}</div>
-          ${area > 0 ? `<div class="ws-perm">≈ ${pln(dispClient / area)} / m²</div>` : ''}
-          <div class="ws-perm" style="color:var(--grn);font-weight:700">Zysk netto: +${pln(profit)}</div>
+          <div class="ws-bl" style="color:var(--grn)">${isBrutto ? 'Oferta brutto' : 'Oferta brutto klienta'}</div>
+          ${area > 0 ? `<div class="ws-perm">≈ ${clientPerM2}</div>` : ''}
+          <div class="ws-perm" style="color:var(--grn);font-weight:700">Zysk: +${pln(profit)}</div>
         </div>
-        <div class="ws-bv" style="color:var(--grn)">${pln(dispClient)}</div>
+        <div class="ws-bv" style="color:var(--grn)">${pln(isBrutto ? clientTotal : matTotal * (1 + margin) * 1.08 + laborTotal * (1 + margin) * 1.23)}</div>
       </div>
     </div>` : '';
 
   s.innerHTML = `
   <div class="ws-box">
-    <div class="ws-panel-label">📊 Kosztorys wewnętrzny</div>
+    <div class="ws-panel-label">📊 Kosztorys ${isBrutto ? '(ceny brutto z VAT)' : '(ceny netto)'}</div>
     <div class="ws-group">
       <div class="ws-gtitle">Materiały budowlane (A–H)</div>
       ${row('Izolacja EPS', sumSec('eps'))}
@@ -352,7 +348,7 @@ export function updateWycenaSummary() {
       ${row('Parapety i obróbki', sumSec('parapety'))}
       ${row('Taśmy, folie, pianka', sumSec('tasmy'))}
       ${sumSec('custom_mat') > 0 ? row('Własne materiały', sumSec('custom_mat')) : ''}
-      <div class="ws-row ws-subtot"><span>Razem materiały netto</span><span>${pln(matNetto)}</span></div>
+      <div class="ws-row ws-subtot"><span>Razem materiały</span><span>${pln(matTotal)}</span></div>
     </div>
     <div class="ws-group">
       <div class="ws-gtitle">Robocizna i usługi (I–L)</div>
@@ -360,16 +356,16 @@ export function updateWycenaSummary() {
       ${sumSec('rusz') > 0 ? row('Rusztowanie', sumSec('rusz')) : ''}
       ${sumSec('prace') > 0 ? row('Prace dodatkowe', sumSec('prace')) : ''}
       ${sumSec('custom_rob') > 0 ? row('Własne prace', sumSec('custom_rob')) : ''}
-      <div class="ws-row ws-subtot"><span>Razem robocizna netto</span><span>${pln(laborNetto)}</span></div>
+      <div class="ws-row ws-subtot"><span>Razem robocizna</span><span>${pln(laborTotal)}</span></div>
     </div>
     <div class="ws-final">
-      <div class="ws-row"><span>Suma netto</span><span style="font-weight:700">${pln(totalNetto)}</span></div>
-      ${isVat ? `
-        <div class="ws-row"><span>VAT materiały 8%</span><span>${pln(vatMat)}</span></div>
-        <div class="ws-row"><span>VAT robocizna 23%</span><span>${pln(vatLab)}</span></div>` : ''}
+      ${isBrutto
+        ? `<div class="ws-row"><span>Razem (z VAT)</span><span style="font-weight:700">${pln(grandTotal)}</span></div>`
+        : `<div class="ws-row"><span>Suma netto</span><span style="font-weight:700">${pln(grandTotal)}</span></div>
+           ${vatBlock}`}
       <div class="ws-brutto">
-        <div><div class="ws-bl">${isVat ? 'Razem brutto' : 'Razem netto'}</div>${area > 0 ? `<div class="ws-perm">≈ ${pln(dispInt / area)} / m²</div>` : ''}</div>
-        <div class="ws-bv">${pln(dispInt)}</div>
+        <div><div class="ws-bl">Razem brutto</div>${area > 0 ? `<div class="ws-perm">≈ ${dispPerM2}</div>` : ''}</div>
+        <div class="ws-bv">${pln(grandBrutto)}</div>
       </div>
     </div>
     ${clientPanel}
@@ -393,5 +389,5 @@ Object.assign(window, {
   buildWycenaRows, rowKey, editWycenaRow, changeRowShop,
   refreshRowTotals, refreshSectionTotals, syncLiveBarFromWycena,
   scheduleWycenaSave, updateWycenaSummary, resetWycenaEdits,
-  toggleWycenaVat, updClientMargin,
+  updClientMargin,
 });
