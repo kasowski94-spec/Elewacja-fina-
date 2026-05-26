@@ -1,50 +1,42 @@
-#!/usr/bin/env bash
-# Przygotowuje katalog www/ z plikami web do Capacitor
+#!/bin/bash
 set -e
 
-echo "==> Tworzenie katalogu www/..."
-rm -rf www
+echo "=== ElewacjaPro Android Setup ==="
+
+# 1. Utwórz katalog www
 mkdir -p www
 
-echo "==> Budowanie bundla JS (esbuild — kompatybilnosc z Android WebView)..."
-./node_modules/.bin/esbuild src/main.js \
+# 2. Zbuduj bundle JS (esbuild)
+echo "Building JS bundle..."
+npx esbuild src/main.js \
   --bundle \
-  --outfile=www/app-bundle.js \
   --format=iife \
-  --platform=browser \
-  && echo "    Bundle OK" \
-  || { echo "    BLAD: esbuild nie powiodlo sie"; exit 1; }
+  --global-name=App \
+  --target=chrome80 \
+  --outfile=app-bundle.js
 
-echo "==> Kopiowanie plikow web..."
-rsync -av \
-  --exclude='node_modules/' \
-  --exclude='android/' \
-  --exclude='ios/' \
-  --exclude='www/' \
-  --exclude='.git/' \
-  --exclude='android-setup.sh' \
-  --exclude='package.json' \
-  --exclude='package-lock.json' \
-  --exclude='capacitor.config.json' \
-  --exclude='*.sh' \
+# 3. Skopiuj pliki do www/
+echo "Copying files to www/..."
+rsync -av --exclude='node_modules' --exclude='www' --exclude='.git' \
+  --exclude='android' --exclude='*.sh' \
   . www/
 
-echo "==> Pobieranie jsPDF lokalnie (dla trybu offline)..."
-JSPDF_URL="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
-curl -fsSL "$JSPDF_URL" -o www/jspdf.min.js \
-  && echo "    jsPDF pobrane OK" \
-  || { echo "    BLAD: Nie udalo sie pobrac jsPDF"; exit 1; }
+# 4. Pobierz jsPDF jeśli nie ma
+if [ ! -f "www/jspdf.min.js" ]; then
+  echo "Downloading jsPDF..."
+  curl -L -o www/jspdf.min.js \
+    "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" || \
+    echo "WARNING: jsPDF download failed — app will use CDN fallback"
+fi
 
-echo "==> Patching www/index.html — zamiana CDN na lokalne pliki..."
-# Zamien blokujacy CDN jsPDF na lokalny plik (brak dostepu do sieci w WebView = timeout)
-sed -i 's|<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>|<script defer src="./jspdf.min.js"></script>|g' www/index.html
-# Google Fonts blokuje renderowanie bez internetu — usun (app uzywa fallback font)
-sed -i 's|<link href="https://fonts.googleapis.com/[^"]*" rel="stylesheet">||g' www/index.html
-echo "    Patching OK"
+# 5. Patch index.html dla Android WebView
+echo "Patching index.html for Android..."
+if [ -f "www/index.html" ]; then
+  # Usuń Google Fonts (brak internetu w buildzie)
+  sed -i 's|<link href="https://fonts.googleapis.com[^"]*" rel="stylesheet">||g' www/index.html
+  # Zamień moduł ES na bundle IIFE
+  sed -i 's|<script type="module" src="src/main.js"></script>|<script src="app-bundle.js"></script>|g' www/index.html
+  echo "Patching done."
+fi
 
-echo "==> Patching www/index.html — zamiana module script na bundle..."
-# Android WebView moze nie obslugiwac ES modules — uzywamy bundla IIFE
-sed -i 's|<script type="module" src="src/main.js"></script>|<script src="app-bundle.js"></script>|g' www/index.html
-echo "    Module -> Bundle OK"
-
-echo "==> Gotowe! Uruchom: npx cap sync android"
+echo "=== Setup complete! Run: npx cap sync android ==="

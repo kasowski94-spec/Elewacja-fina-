@@ -1,14 +1,17 @@
-// ════════════ OBLICZENIA FIZYCZNE ════════════
-
-/** Współczynnik U całej przegrody: 1/(1/u0 + t/lam) */
-export const calcU = (t, lam, u0) => 1 / (1 / u0 + t / lam);
-
-/** Kolor wskaźnika U */
-export const uColor = u =>
-  u <= 0.20 ? '#3ecf8e' : u <= 0.25 ? '#7eefc4' : u <= 0.30 ? '#f5a623' : '#f06a6a';
-
-/** Procent paska postępu U (skala 0.10–0.65) */
-export const uPct = u => Math.max(5, Math.min(100, Math.round((0.65 - u) / 0.55 * 100)));
-
-/** Czy grubość jest rekomendowana (15 lub 20 cm) */
-export const isRec = t => t === 15 || t === 20;
+export function calcU(thickM, lambda, wallU0) {
+  const R_si = 0.13, R_se = 0.04;
+  const R_wall = wallU0 > 0 ? (1 / wallU0) - R_si - R_se : 0;
+  const R_ins = lambda > 0 ? thickM / lambda : 0;
+  return 1 / (R_si + R_wall + R_ins + R_se);
+}
+export function uColor(u) {
+  if (u <= 0.20) return '#3ecf8e';
+  if (u <= 0.30) return '#f5a623';
+  return '#f06a6a';
+}
+export function uPct(u) {
+  return Math.max(4, Math.min(100, (1 - u / 1.5) * 100));
+}
+export function isRec(t) {
+  return t === 15 || t === 20;
+}

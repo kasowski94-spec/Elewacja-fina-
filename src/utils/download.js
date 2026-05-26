@@ -1,7 +1,6 @@
-// ════════════ POBIERANIE PLIKU ════════════
-
 export function dl(content, filename) {
-  const blob = new Blob(['﻿' + content], { type: 'text/csv;charset=utf-8;' });
+  const BOM = '﻿';
+  const blob = new Blob([BOM + content], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;

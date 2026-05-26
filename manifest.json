@@ -1,149 +1,33 @@
 {
-  "id": "/",
-  "name": "ElewacjaPro — Kalkulator ETICS",
+  "name": "ElewacjaPro",
   "short_name": "ElewacjaPro",
-  "description": "Profesjonalny kalkulator materialow elewacyjnych ETICS z wycena PDF, zamowieniami materialow i baza cenowa hurtowni",
+  "description": "Profesjonalny kalkulator materiałów elewacyjnych ETICS",
   "start_url": "./",
-  "scope": "./",
   "display": "standalone",
   "background_color": "#0b0d14",
   "theme_color": "#e8541a",
-  "orientation": "portrait-primary",
-  "lang": "pl-PL",
-  "dir": "ltr",
-  "categories": [
-    "business",
-    "productivity",
-    "utilities"
-  ],
+  "orientation": "any",
   "icons": [
-    {
-      "src": "elewacja-icon-72.png",
-      "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "elewacja-icon-96.png",
-      "sizes": "96x96",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "elewacja-icon-128.png",
-      "sizes": "128x128",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "elewacja-icon-144.png",
-      "sizes": "144x144",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "elewacja-icon-152.png",
-      "sizes": "152x152",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "elewacja-icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "elewacja-icon-192-maskable.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "elewacja-icon-256.png",
-      "sizes": "256x256",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "elewacja-icon-384.png",
-      "sizes": "384x384",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "elewacja-icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "elewacja-icon-512-maskable.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
+    { "src": "icons/icon-72.png",  "sizes": "72x72",   "type": "image/png" },
+    { "src": "icons/icon-96.png",  "sizes": "96x96",   "type": "image/png" },
+    { "src": "icons/icon-128.png", "sizes": "128x128", "type": "image/png" },
+    { "src": "icons/icon-144.png", "sizes": "144x144", "type": "image/png" },
+    { "src": "icons/icon-152.png", "sizes": "152x152", "type": "image/png" },
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-256.png", "sizes": "256x256", "type": "image/png" },
+    { "src": "icons/icon-384.png", "sizes": "384x384", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    {
-      "name": "Nowy projekt",
-      "short_name": "Nowy",
-      "url": "./?action=new",
-      "icons": [
-        {
-          "src": "elewacja-icon-96.png",
-          "sizes": "96x96",
-          "type": "image/png"
-        }
-      ]
-    },
-    {
-      "name": "Wycena",
-      "short_name": "Wycena",
-      "url": "./?tab=wycena",
-      "icons": [
-        {
-          "src": "elewacja-icon-96.png",
-          "sizes": "96x96",
-          "type": "image/png"
-        }
-      ]
-    },
-    {
-      "name": "Biblioteka",
-      "short_name": "Biblioteka",
-      "url": "./?tab=biblioteka",
-      "icons": [
-        {
-          "src": "elewacja-icon-96.png",
-          "sizes": "96x96",
-          "type": "image/png"
-        }
-      ]
-    }
+    { "name": "Nowy projekt", "url": "./?action=new", "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }] },
+    { "name": "Wycena", "url": "./?tab=wycena", "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }] },
+    { "name": "Biblioteka", "url": "./?tab=biblioteka", "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }] }
   ],
   "screenshots": [
-    {
-      "src": "elewacja-screen-1.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Biblioteka materialow z cenami z hurtowni"
-    },
-    {
-      "src": "elewacja-screen-2.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Wycena ETICS z podzialem na sekcje"
-    },
-    {
-      "src": "elewacja-screen-3.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Kalkulator wariantow EPS"
-    }
-  ],
-  "prefer_related_applications": false
+    { "src": "elewacja-screen-1.png", "sizes": "390x844", "type": "image/png", "form_factor": "narrow" },
+    { "src": "elewacja-screen-2.png", "sizes": "390x844", "type": "image/png", "form_factor": "narrow" },
+    { "src": "elewacja-screen-3.png", "sizes": "390x844", "type": "image/png", "form_factor": "narrow" }
+  ]
 }

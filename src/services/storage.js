@@ -1,60 +1,41 @@
-// ════════════ STORAGE SERVICE — IndexedDB + localStorage ════════════
-
 const DB_NAME = 'elewacjapro';
-const DB_VER = 1;
-
-let db = null;
+const DB_VER  = 1;
+const STORE   = 'projects';
+let _db = null;
 
 export function openDB() {
   return new Promise((res, rej) => {
+    if (_db) { res(_db); return; }
     const req = indexedDB.open(DB_NAME, DB_VER);
-    req.onupgradeneeded = e => {
-      const d = e.target.result;
-      if (!d.objectStoreNames.contains('projects'))
-        d.createObjectStore('projects', { keyPath: 'id' });
-      if (!d.objectStoreNames.contains('settings'))
-        d.createObjectStore('settings', { keyPath: 'key' });
-    };
-    req.onsuccess = e => { db = e.target.result; res(db); };
+    req.onupgradeneeded = e => e.target.result.createObjectStore(STORE);
+    req.onsuccess = e => { _db = e.target.result; res(_db); };
     req.onerror = () => rej(req.error);
   });
 }
 
-export async function idbSaveProjects(data) {
-  try { localStorage.setItem('elewacjapro_v4', JSON.stringify(data)); } catch (e) {}
-  if (!db) return;
-  return new Promise(res => {
-    const tx = db.transaction('projects', 'readwrite');
-    const store = tx.objectStore('projects');
-    store.clear();
-    for (const [id, proj] of Object.entries(data)) {
-      store.put({ id, ...proj });
-    }
-    tx.oncomplete = () => res();
-    tx.onerror = () => res();
-    tx.onabort = () => res();
-  });
+export function idbSaveProjects(projects) {
+  if (!_db) return;
+  try {
+    const tx = _db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).put(projects, 'all');
+  } catch (e) {}
 }
 
-export async function idbLoadProjects() {
-  if (!db) {
-    try { return JSON.parse(localStorage.getItem('elewacjapro_v4') || '{}'); } catch (e) { return {}; }
-  }
+export function idbLoadProjects() {
   return new Promise(res => {
-    const tx = db.transaction('projects', 'readonly');
-    const store = tx.objectStore('projects');
-    const req = store.getAll();
-    req.onsuccess = () => {
-      const data = {};
-      req.result.forEach(p => { const { id, ...rest } = p; data[id] = rest; });
-      if (!Object.keys(data).length) {
+    if (!_db) { res({}); return; }
+    try {
+      const tx = _db.transaction(STORE, 'readonly');
+      const req = tx.objectStore(STORE).get('all');
+      req.onsuccess = () => {
+        const data = req.result;
+        if (data && typeof data === 'object') { res(data); return; }
         try {
-          const ls = JSON.parse(localStorage.getItem('elewacjapro_v4') || '{}');
-          Object.assign(data, ls);
-        } catch (e) {}
-      }
-      res(data);
-    };
-    req.onerror = () => res({});
+          const s = localStorage.getItem('elewacjapro_v4');
+          res(s ? JSON.parse(s) : {});
+        } catch { res({}); }
+      };
+      req.onerror = () => res({});
+    } catch { res({}); }
   });
 }

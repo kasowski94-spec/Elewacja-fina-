@@ -1,7 +1,5 @@
-// ════════════ DEBOUNCE ════════════
-
-export function debounce(fn, delay) {
-  let timer = null;
+export function debounce(fn, delay = 200) {
+  let timer;
   return function (...args) {
     clearTimeout(timer);
     timer = setTimeout(() => fn.apply(this, args), delay);

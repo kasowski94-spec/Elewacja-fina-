@@ -1,20 +1,21 @@
 {
   "name": "elewacja-pro",
   "version": "1.0.0",
-  "private": true,
-  "description": "ElewacjaPro — Kalkulator materialow elewacyjnych ETICS",
+  "description": "Kalkulator elewacji ETICS",
+  "main": "index.html",
+  "scripts": {
+    "build": "esbuild src/main.js --bundle --format=iife --global-name=App --outfile=app-bundle.js",
+    "build:android": "bash android-setup.sh",
+    "sync": "npx cap sync android"
+  },
   "dependencies": {
     "@capacitor/android": "^6.2.0",
-    "@capacitor/core": "^6.2.0"
+    "@capacitor/core": "^6.2.0",
+    "@capacitor/filesystem": "^6.0.4",
+    "@capacitor/share": "^6.0.4"
   },
   "devDependencies": {
     "@capacitor/cli": "^6.2.0",
-    "esbuild": "^0.20.0"
-  },
-  "scripts": {
-    "prepare-web": "bash android-setup.sh",
-    "sync": "npx cap sync android",
-    "open-android": "npx cap open android",
-    "build-android": "bash android-setup.sh && npx cap sync android && npx cap open android"
+    "esbuild": "0.20.2"
   }
 }

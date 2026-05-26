@@ -2,23 +2,10 @@
   "appId": "pl.elewacjapro.app",
   "appName": "ElewacjaPro",
   "webDir": "www",
-  "server": {
-    "androidScheme": "https"
-  },
-  "android": {
-    "allowMixedContent": false,
-    "captureInput": true,
-    "webContentsDebuggingEnabled": false,
-    "backgroundColor": "#0b0d14"
-  },
+  "backgroundColor": "#0b0d14",
   "plugins": {
     "SplashScreen": {
-      "launchShowDuration": 2000,
-      "launchFadeOutDuration": 500,
-      "backgroundColor": "#0b0d14",
-      "androidSplashResourceName": "splash",
-      "androidScaleType": "CENTER_CROP",
-      "showSpinner": false
+      "launchShowDuration": 0
     }
   }
 }
