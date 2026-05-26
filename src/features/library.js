@@ -10,6 +10,9 @@ import {
 import { customItems } from '../store/state.js';
 import { fmt, escAttr } from '../utils/format.js';
 
+const LABOR_IDS = new Set(LABOR_LIBRARY.map(x => x.id));
+let FAV_SET = new Set();
+
 function vatFor(isLabor) { return priceMode === 'brutto' ? (isLabor ? VAT_LABOR : VAT_MAT) : 1; }
 
 export function togglePriceMode(mode) {
@@ -89,8 +92,8 @@ export function renderLibrary() {
   wrapper.innerHTML = Object.entries(groups).map(([cat, items]) => `
     <div class="lib-section-hdr">${cats[cat] || cat}</div>
     ${items.map(it => {
-    const fav = favorites.includes(it.id);
-    const isLab = LABOR_LIBRARY.some(x => x.id === it.id);
+    const fav = FAV_SET.has(it.id);
+    const isLab = LABOR_IDS.has(it.id);
     const vat = vatFor(isLab);
     return `<div class="lib-item">
         <button class="lib-fav ${fav ? 'on' : ''}" onclick="window.toggleFav('${it.id}')" title="Ulubione">${fav ? '⭐' : '☆'}</button>
@@ -112,8 +115,8 @@ export function renderLibrary() {
 
 export function toggleFav(id) {
   const i = favorites.indexOf(id);
-  if (i < 0) favorites.push(id);
-  else favorites.splice(i, 1);
+  if (i < 0) { favorites.push(id); FAV_SET.add(id); }
+  else { favorites.splice(i, 1); FAV_SET.delete(id); }
   saveFavorites();
   renderLibrary();
   window.showToast?.(i < 0 ? '⭐ Dodano do ulubionych' : 'Usunięto z ulubionych');
@@ -126,7 +129,7 @@ export function saveFavorites() {
 export function loadFavorites() {
   try {
     const s = localStorage.getItem('elewacjapro_fav');
-    if (s) setFavorites(JSON.parse(s));
+    if (s) { setFavorites(JSON.parse(s)); FAV_SET = new Set(favorites); }
   } catch (e) {}
 }
 

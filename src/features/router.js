@@ -114,6 +114,12 @@ export function activateSub(tabName, subId) {
 
 // Scroll spy
 let _spyTimer = null;
+let _scrollTrigger = 114; // cached topbar + subbar + 24; updated by invalidateScrollCache()
+export function invalidateScrollCache() {
+  const tb = document.getElementById('topbar')?.offsetHeight || 90;
+  const sb = document.getElementById('subtabs-bar')?.offsetHeight || 0;
+  _scrollTrigger = tb + sb + 24;
+}
 window.addEventListener('scroll', () => {
   clearTimeout(_spyTimer);
   _spyTimer = setTimeout(() => {
@@ -122,9 +128,7 @@ window.addEventListener('scroll', () => {
     if (!items) return;
     const anchors = items.filter(s => s.type === 'anchor');
     if (!anchors.length) return;
-    const topbarH = document.getElementById('topbar')?.offsetHeight || 90;
-    const subH = document.getElementById('subtabs-bar')?.offsetHeight || 0;
-    const trigger = topbarH + subH + 24;
+    const trigger = _scrollTrigger;
     let current = anchors[0].id;
     for (const a of anchors) {
       const el = document.getElementById(a.id);

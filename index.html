@@ -16,8 +16,8 @@
 <title>ElewacjaPro — Kalkulator ETICS</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="src/styles/main.css">
-<script src="jspdf.min.js" onerror="this.remove();var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';document.head.appendChild(s)"></script>
-<script src="pdf-font.js"></script>
+<script src="jspdf.min.js" defer onerror="this.remove();var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';document.head.appendChild(s)"></script>
+<script src="pdf-font.js" defer></script>
 </head>
 <body>
 
@@ -311,7 +311,7 @@
 
   <!-- Wyszukiwarka + filtry kategorii -->
   <div class="lib-search-card">
-    <input type="text" id="libSearch" placeholder="🔍 Szukaj w bibliotece…" oninput="renderLibrary()">
+    <input type="text" id="libSearch" placeholder="🔍 Szukaj w bibliotece…" oninput="clearTimeout(window._libST);window._libST=setTimeout(renderLibrary,280)">
     <div id="libCatFilter" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:11px"></div>
   </div>
 

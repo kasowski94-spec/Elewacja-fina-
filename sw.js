@@ -1,6 +1,6 @@
-// ElewacjaPro Service Worker v11.0
-const CACHE = 'elewacja-v11';
-const FONTS = 'elewacja-fonts-v11';
+// ElewacjaPro Service Worker v12.0
+const CACHE = 'elewacja-v12';
+const FONTS = 'elewacja-fonts-v12';
 
 const CORE = [
   './',

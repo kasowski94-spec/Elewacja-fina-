@@ -83,10 +83,10 @@ export function collectState() {
   fields.forEach(f => { const el = document.getElementById(f); if (el) st[f] = el.value; });
   st.ruszEnabled = document.getElementById('rusz-toggle')?.checked !== false;
   st.selectedVariant = selectedVariant;
-  st.parapets = JSON.parse(JSON.stringify(parapets));
-  st.foamItems = JSON.parse(JSON.stringify(foamItems));
-  st.customItems = JSON.parse(JSON.stringify(customItems));
-  st.wycenaManualEdits = JSON.parse(JSON.stringify(wycenaManualEdits));
+  st.parapets = structuredClone(parapets);
+  st.foamItems = structuredClone(foamItems);
+  st.customItems = structuredClone(customItems);
+  st.wycenaManualEdits = structuredClone(wycenaManualEdits);
   st.extras = EXTRAS_DEF.reduce((o, e) => {
     o[e.id] = {
       on: document.getElementById('ext_' + e.id)?.checked,

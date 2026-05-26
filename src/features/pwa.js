@@ -3,6 +3,7 @@
 import { TABS_ORDER, CUSTOM_TABS } from '../data/constants.js';
 import { projects, currentProject, setProjects, setCurrentProject } from '../store/state.js';
 import { openDB, idbLoadProjects } from '../services/storage.js';
+import { invalidateScrollCache } from './router.js';
 
 // ── Toast ──
 export function showToast(msg, dur = 3000) {
@@ -115,6 +116,7 @@ document.addEventListener('touchend', e => {
 function updateTopbarH() {
   const tb = document.getElementById('topbar');
   if (tb) document.documentElement.style.setProperty('--topbar-h', tb.offsetHeight + 'px');
+  invalidateScrollCache();
 }
 
 // ── Async Startup ──

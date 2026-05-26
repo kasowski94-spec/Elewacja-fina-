@@ -118,7 +118,7 @@ export function buildWycenaRows() {
     ...secProfile, ...secParapety, ...secTasmy, ...secCustomMat,
     ...secLabor, ...secRusz, ...secPrace, ...secCustomRob,
   ];
-  newRows.forEach((r, i) => { r.lp = i + 1; });
+  newRows.forEach((r, i) => { r.lp = i + 1; r._gi = i; });
 
   newRows.forEach(r => {
     const ov = wycenaManualEdits[rowKey(r)];
@@ -160,7 +160,7 @@ export function buildWycenaRows() {
         <span class="wr-total">Wartość</span>
       </div>
       ${rows.map(row => {
-      const gi = newRows.indexOf(row);
+      const gi = row._gi;
       const tot = (row.qty || 0) * (row.price || 0);
       const edited = row.shop === 'własna';
       const noShop = row.shop === '—';

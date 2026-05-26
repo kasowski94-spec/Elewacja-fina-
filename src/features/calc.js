@@ -21,7 +21,7 @@ export function debCalc() {
   clearTimeout(_calcTimer);
   _calcTimer = setTimeout(() => {
     try { calc(); } catch (e) { console.warn(e); }
-  }, 160);
+  }, 300);
 }
 
 export function calc() {
