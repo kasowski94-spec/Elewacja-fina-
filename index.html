@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#e8541a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ElewacjaPro">
+<meta name="application-name" content="ElewacjaPro">
+<meta name="description" content="Profesjonalny kalkulator materiałów elewacyjnych ETICS">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="elewacja-icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<title>ElewacjaPro — Kalkulator ETICS</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="src/styles/main.css">
+<script src="jspdf.min.js" onerror="this.remove();var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';document.head.appendChild(s)"></script>
+<script src="pdf-font.js"></script>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div id="topbar">
+  <div id="topbar-main">
+    <div id="topbar-logo">ElewacjaPro</div>
+    <div id="project-select-wrap">
+      <select id="project-select" onchange="loadProject(this.value)"></select>
+      <button id="btn-new-proj" onclick="newProjectModal()">+ Nowy</button>
+    </div>
+  </div>
+  <div id="live-bar">
+    <div class="lb-chip active" id="chip-total"><div class="dot"></div><div><div class="lbl">ŁĄCZNIE PROJEKT</div><div class="val orange" id="chip-total-val">0 zł</div></div></div>
+    <div class="lb-chip"><div class="dot"></div><div><div class="lbl">Styropian</div><div class="val" id="chip-eps-val">—</div></div></div>
+    <div class="lb-chip"><div class="dot"></div><div><div class="lbl">Materiały</div><div class="val" id="chip-mat-val">—</div></div></div>
+    <div class="lb-chip"><div class="dot"></div><div><div class="lbl">Robocizna</div><div class="val" id="chip-labor-val">—</div></div></div>
+    <div class="lb-chip"><div class="dot"></div><div><div class="lbl">Wariant</div><div class="val green" id="chip-var-val">—</div></div></div>
+    <div class="lb-chip"><div class="dot"></div><div><div class="lbl">EPS m³</div><div class="val" id="chip-eps-m3-val">—</div></div></div>
+    <div class="lb-chip"><div class="dot"></div><div><div class="lbl">Hurtownia</div><div class="val green" id="chip-shop-val">—</div></div></div>
+  </div>
+</div>
+
+<!-- SUBTABS — pasek podsekcji aktualnej zakładki głównej -->
+<div id="subtabs-bar" class="hidden"></div>
+
+<!-- ════════ USTAWIENIA (PIERWSZA) ════════ -->
+<div class="tab-panel active" id="tab-ustawienia">
+<div class="wrap">
+
+  <div class="card">
+    <div class="card-title">Podstawowe dane projektu</div>
+    <div class="fg">
+      <div class="ig"><label>Powierzchnia elewacji (m²)</label><input type="number" id="area" value="350" min="1" oninput="debCalc()"></div>
+      <div class="ig"><label>Naddatek na odpady (%)</label><input type="number" id="waste" value="5" min="0" max="30" oninput="debCalc()"><span class="hint">Złożone fasady: 8–10%</span></div>
+      <div class="ig"><label>Typ styropianu EPS</label>
+        <select id="epsType" onchange="calc()">
+          <option value="0.038">EPS 70 (λ=0,038) — biały</option>
+          <option value="0.033" selected>EPS GOLD/SILVER (λ=0,033) — grafitowy</option>
+          <option value="0.031">EPS NEOPOR (λ=0,031) — premium</option>
+        </select>
+      </div>
+      <div class="ig"><label>Grubość styropianu EPS (cm)</label>
+        <select id="epsThick" onchange="setVariant(+this.value)">
+          <option value="5">5 cm</option><option value="8">8 cm</option><option value="10">10 cm</option>
+          <option value="12">12 cm</option><option value="14">14 cm</option><option value="15" selected>15 cm</option>
+          <option value="16">16 cm</option><option value="18">18 cm</option><option value="20">20 cm</option>
+          <option value="25">25 cm</option><option value="30">30 cm</option>
+        </select>
+        <span class="hint w">Wspólne dla wariantów, łączników i wyceny</span>
+      </div>
+      <div class="ig"><label>Globalna opcja cenowa (dla wyceny)</label>
+        <select id="mainShop" onchange="calc()">
+          <optgroup label="Hurtownie">
+            <option value="styro24.pl">styro24.pl — najtańsza</option>
+            <option value="mega1000.pl">mega1000.pl</option>
+            <option value="Castorama/LM">Castorama / Leroy Merlin</option>
+          </optgroup>
+          <optgroup label="Ceny rynkowe">
+            <option value="srednia" selected>Średnia cena rynkowa</option>
+            <option value="posrednia">Opcja pośrednia (oszczędna)</option>
+          </optgroup>
+          <optgroup label="Własne">
+            <option value="reczne">Ceny ręczne (zakładka Ceny)</option>
+          </optgroup>
+        </select>
+        <span class="hint w">Globalna — pojedyncze pozycje nadpiszesz w Wycenie</span>
+      </div>
+      <div class="ig">
+        <label>Tryb cen VAT</label>
+        <div style="display:flex;gap:6px;margin-top:4px">
+          <button type="button" class="lib-pmode-btn active" id="pricemode-netto" onclick="togglePriceMode('netto')">Netto</button>
+          <button type="button" class="lib-pmode-btn" id="pricemode-brutto" onclick="togglePriceMode('brutto')">Brutto +VAT</button>
+        </div>
+        <span class="hint w">Wpływa na bibliotekę i całą wycenę</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Ściana nośna</div>
+    <div class="fg">
+      <div class="ig"><label>Materiał ściany</label>
+        <select id="wallMat" onchange="updateWallU()">
+          <option value="cegla_pelna">Cegła pełna</option>
+          <option value="pustak_ceram" selected>Pustak ceramiczny</option>
+          <option value="beton_kom">Beton komórkowy</option>
+          <option value="zebet">Żelbet / beton</option>
+          <option value="cegla_silikat">Cegła silikatowa</option>
+          <option value="inne">Inne / własne U₀</option>
+        </select>
+      </div>
+      <div class="ig"><label>Grubość ściany (cm)</label><input type="number" id="wallThick" value="25" min="5" max="120" oninput="updateWallU()"><span class="hint w" id="wallUhint">U₀ ≈ 0,45</span></div>
+      <div class="ig"><label>U₀ ściany (W/m²K)</label><input type="number" id="wallU0" value="0.45" min="0.05" max="3" step="0.01" oninput="debCalc()"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Podłoże i gruntowanie</div>
+    <div class="fg">
+      <div class="ig"><label>Rodzaj podłoża</label>
+        <select id="groundType" onchange="calc()">
+          <option value="tynk_cem">Tynk cementowo-wapienny</option>
+          <option value="tynk_stary">Stary tynk</option>
+          <option value="beton">Beton / żelbet</option>
+          <option value="pustak_ceram">Pustak ceramiczny (goły)</option>
+          <option value="bet_kom">Beton komórkowy (goły)</option>
+          <option value="farba">Podłoże malowane</option>
+        </select>
+      </div>
+      <div class="ig"><label>Grunt do podłoża</label>
+        <select id="primerSubType" onchange="calc()">
+          <option value="0.15">Drobnocząsteczkowy 0,15 l/m²</option>
+          <option value="0.20">Głębokopenetrujący 0,20 l/m²</option>
+          <option value="0.10">Kontaktowy 0,10 l/m²</option>
+          <option value="0.25">Wzmacniający 0,25 l/m²</option>
+          <option value="0">Brak</option>
+        </select>
+      </div>
+      <div class="ig"><label>Masa sczepna (szczepny)</label>
+        <select id="bondType" onchange="calc()">
+          <option value="0">Brak</option>
+          <option value="0.30">Betonikol 0,30 kg/m²</option>
+          <option value="0.50">Zaprawa cementowa 0,50 kg/m²</option>
+          <option value="0.20">Mleczko sczepne 0,20 l/m²</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Tynk i wykończenie</div>
+    <div class="fg">
+      <div class="ig"><label>Typ tynku</label>
+        <select id="plasterType" onchange="calc()">
+          <option value="3.2">Silikonowy 1,5 mm (3,2 kg/m²)</option>
+          <option value="4.0">Silikonowy 2,0 mm (4,0 kg/m²)</option>
+          <option value="3.0">Silikatowy 1,5 mm (3,0 kg/m²)</option>
+          <option value="3.8">Mineralny 2,0 mm (3,8 kg/m²)</option>
+          <option value="2.8">Akrylowy 1,5 mm (2,8 kg/m²)</option>
+        </select>
+      </div>
+      <div class="ig"><label>Farba elewacyjna</label>
+        <select id="paintType" onchange="calc()">
+          <option value="0">Brak (tynk barwiony)</option>
+          <option value="0.15">Silikonowa 1× (0,15 l/m²)</option>
+          <option value="0.28">Silikonowa 2× (0,28 l/m²)</option>
+          <option value="0.20">Akrylowa 2× (0,20 l/m²)</option>
+        </select>
+      </div>
+      <div class="ig"><label>Grunt pod tynk (l/m²)</label><input type="number" id="primerRate" value="0.15" min="0" max="0.5" step="0.01" oninput="debCalc()"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Łączniki — strefa</div>
+    <div class="fg">
+      <div class="ig"><label>Wysokość budynku (m)</label><input type="number" id="buildH" value="9" min="2" max="300" oninput="recAnchors()"></div>
+      <div class="ig"><label>Strefa wiatrowa</label>
+        <select id="windZone" onchange="recAnchors()">
+          <option value="1.0">I — większość Polski</option>
+          <option value="1.25">II — pas nadbałtycki</option>
+          <option value="1.5">III — góry/Sudety</option>
+        </select>
+      </div>
+      <div class="ig"><label>Łączniki/m² (auto)</label><input type="number" id="anchPerM2" value="6" min="4" max="16" oninput="debCalc()"><span class="hint w">Można nadpisać</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Taśmy elewacyjne i malarskie</div>
+    <div class="fg">
+      <div class="ig"><label>Taśma uszczelniająca okienna (mb)</label><input type="number" id="tapeWin" value="60" min="0" oninput="debCalc()"><span class="hint">Niebieska/pomarańczowa</span></div>
+      <div class="ig"><label>Taśma rozprężna (mb)</label><input type="number" id="tapeExp" value="30" min="0" oninput="debCalc()"><span class="hint">Pod parapet</span></div>
+      <div class="ig"><label>Taśma elewacyjna ochronna (mb)</label><input type="number" id="tapeElew" value="40" min="0" oninput="debCalc()"><span class="hint">Do zabezpieczania krawędzi</span></div>
+      <div class="ig"><label>Taśma malarska (mb)</label><input type="number" id="tapeMal" value="50" min="0" oninput="debCalc()"><span class="hint">Do tynkowania, malowania</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Folie i akcesoria</div>
+    <div class="fg">
+      <div class="ig"><label>Folie ochronne na okna (szt.)</label><input type="number" id="foilCount" value="8" min="0" oninput="debCalc()"></div>
+      <div class="ig"><label>Obwód budynku (mb)</label><input type="number" id="perim" value="75" min="5" oninput="debCalc()"><span class="hint">Listwy startowe</span></div>
+      <div class="ig"><label>Obwód okien + drzwi (mb)</label><input type="number" id="winPerim" value="120" min="0" oninput="debCalc()"><span class="hint">Narożniki</span></div>
+      <div class="ig"><label>Obróbki dodatkowe (mb)</label><input type="number" id="flashMb" value="10" min="0" oninput="debCalc()"></div>
+      <div class="ig"><label>Profile dylatacyjne (mb)</label><input type="number" id="dilMb" value="0" min="0" oninput="debCalc()"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Narożniki — rodzaj</div>
+    <div class="fg">
+      <div class="ig"><label>Rodzaj narożnika</label>
+        <select id="cornerType" onchange="calc()">
+          <option value="pvc_siatka">Narożnik PVC z siatką (standard)</option>
+          <option value="pvc">Narożnik PVC zwykły</option>
+          <option value="alu">Narożnik aluminiowy</option>
+          <option value="kapinos">Narożnik z kapinosem (okapnik)</option>
+          <option value="pcv_diag">Narożnik diagonalny (dylatacyjny)</option>
+          <option value="siatka_pancerna">Narożnik z siatką pancerną</option>
+        </select>
+      </div>
+      <div class="ig"><label>Listwa przyokienna (z uszczelką)</label>
+        <select id="winStripType" onchange="calc()">
+          <option value="0">Brak</option>
+          <option value="1">Listwa przyokienna standard</option>
+          <option value="1.3">Listwa przyokienna z kapinosem</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Pianka montażowa — rodzaj i ilość</div>
+    <div id="foamContainer"></div>
+    <div class="btn-row" style="margin-top:8px;margin-bottom:0">
+      <button class="btn sm" onclick="addFoam()">+ Dodaj rodzaj pianki</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Własne pozycje — Dane projektu</div>
+    <div id="custom-ustawienia"></div>
+    <div class="btn-row" style="margin-top:8px;margin-bottom:0">
+      <button class="btn sm" onclick="openLibraryPicker('ustawienia')">📚 Z biblioteki</button>
+      <button class="btn sm" onclick="addCustom('ustawienia')">+ Własna pozycja</button>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ════════ WARIANTY ════════ -->
+<div class="tab-panel" id="tab-warianty">
+<div class="wrap">
+  <div class="section">
+    <div class="sec-head">Wybierz wariant grubości EPS</div>
+    <div style="font-size:.71rem;color:var(--mut);margin-bottom:10px">Kliknij kartę aby wybrać wariant — aktualizuje pasek i wycenę.</div>
+    <div class="vgrid" id="cardsContainer"></div>
+  </div>
+  <div class="section">
+    <div class="sec-head">Zestawienie zbiorcze</div>
+    <div class="btn-row">
+      <button class="btn" onclick="exportCSV()">⬇ CSV</button>
+      <button class="btn" onclick="window.print()">🖨 Drukuj</button>
+    </div>
+    <div class="tw">
+      <table class="t"><thead><tr>
+        <th>Grubość</th><th>EPS m²</th><th>m³</th><th>Łączniki</th><th>Klej</th><th>Zbr.</th><th>Siatka</th><th>U</th><th>Koszt EPS</th><th>Status</th>
+      </tr></thead><tbody id="tableBody"></tbody></table>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ════════ MATERIAŁY ════════ -->
+<div class="tab-panel" id="tab-materialy">
+<div class="wrap">
+  <div class="sec-head">Pełne zestawienie materiałów</div>
+  <div id="materialsSection"></div>
+  <div class="card">
+    <div class="card-title">Własne pozycje — Materiały</div>
+    <div id="custom-materialy"></div>
+    <div class="btn-row" style="margin-top:8px;margin-bottom:0">
+      <button class="btn sm" onclick="openLibraryPicker('materialy')">📚 Dodaj z biblioteki</button>
+      <button class="btn sm" onclick="addCustom('materialy')">+ Własny materiał</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ════════ BIBLIOTEKA ════════ -->
+<div class="tab-panel" id="tab-biblioteka">
+<div class="wrap">
+  <div class="sec-head">Biblioteka materiałów i robocizny</div>
+
+  <!-- Przełącznik biblioteki (jak na screenie) -->
+  <div class="lib-mode-row">
+    <button type="button" class="lib-mode-btn active" id="libmode-mat" onclick="setLibMode('mat')">🧱 Materiały</button>
+    <button type="button" class="lib-mode-btn" id="libmode-rob" onclick="setLibMode('rob')">👷 Robocizna</button>
+    <button type="button" class="lib-mode-btn" id="libmode-fav" onclick="setLibMode('fav')">⭐ Ulubione</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+    <span style="font-size:.75rem;color:var(--mut);font-weight:600">Ceny:</span>
+    <button type="button" class="lib-pmode-btn active" data-pmode="netto" onclick="togglePriceMode('netto')">Netto</button>
+    <button type="button" class="lib-pmode-btn" data-pmode="brutto" onclick="togglePriceMode('brutto')">Brutto +VAT</button>
+  </div>
+
+  <!-- Wyszukiwarka + filtry kategorii -->
+  <div class="lib-search-card">
+    <input type="text" id="libSearch" placeholder="🔍 Szukaj w bibliotece…" oninput="renderLibrary()">
+    <div id="libCatFilter" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:11px"></div>
+  </div>
+
+  <div class="lib-info-note">
+    Ceny orientacyjne, baza z <span class="price-date-label">—</span>. Kliknij pozycję aby dodać do projektu z możliwością edycji.
+  </div>
+
+  <div id="libraryList"></div>
+</div>
+</div>
+
+<!-- ════════ PARAPETY ════════ -->
+<div class="tab-panel" id="tab-parapety">
+<div class="wrap">
+  <div class="sec-head">Parapety zewnętrzne</div>
+  <div class="btn-row"><button class="btn pri" onclick="addParapet()">+ Dodaj parapet</button></div>
+  <div id="parapetsContainer"></div>
+  <div class="card" style="margin-top:10px">
+    <div class="card-title">Podsumowanie parapetów</div>
+    <div id="parapetsSummary"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Własne pozycje — Parapety / obróbki</div>
+    <div id="custom-parapety"></div>
+    <div class="btn-row" style="margin-top:8px;margin-bottom:0">
+      <button class="btn sm" onclick="openLibraryPicker('parapety')">📚 Z biblioteki</button>
+      <button class="btn sm" onclick="addCustom('parapety')">+ Własna pozycja</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ════════ PRACE DODATKOWE ════════ -->
+<div class="tab-panel" id="tab-dodatki">
+<div class="wrap">
+  <div class="sec-head">Prace dodatkowe</div>
+  <div id="extrasContainer"></div>
+  <div class="card">
+    <div class="card-title">Koszt prac dodatkowych</div>
+    <div id="extrasSummary"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Własne pozycje — Prace</div>
+    <div id="custom-dodatki"></div>
+    <div class="btn-row" style="margin-top:8px;margin-bottom:0">
+      <button class="btn sm" onclick="openLibraryPicker('dodatki')">📚 Z biblioteki robocizny</button>
+      <button class="btn sm" onclick="addCustom('dodatki')">+ Własna praca</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ════════ ŁĄCZNIKI ════════ -->
+<div class="tab-panel" id="tab-lacze">
+<div class="wrap">
+  <div class="sec-head">Łączniki mechaniczne</div>
+  <div class="card">
+    <div class="card-title">Dobór kołka — typ i długość → cena</div>
+    <div class="fg">
+      <div class="ig"><label>Rodzaj kołka</label>
+        <select id="kolekType" onchange="updKolekOptions()">
+          <option value="pcv">Trzpień PCV (wbijany)</option>
+          <option value="met">Trzpień metalowy (wkręcany)</option>
+          <option value="termo">Z wkładką termiczną</option>
+        </select>
+      </div>
+      <div class="ig"><label>Długość kołka</label>
+        <select id="kolekLen" onchange="updKolekPrice()"></select>
+      </div>
+      <div class="ig"><label>Cena jedn. (zł/szt.) — z biblioteki</label>
+        <input type="number" id="kolekPrice" value="0.90" min="0" step="0.01" oninput="debCalc()">
+        <span class="hint w" id="kolekHint">cena rynkowa wg długości</span>
+      </div>
+    </div>
+    <div style="margin-top:8px;font-size:.68rem;color:var(--mut)">
+      Dobór długości: <strong style="color:var(--txt)">grubość EPS + tynk + zbrojenie + zakotwienie</strong>.
+      Cena pobierana automatycznie z biblioteki materiałów wg typu i długości — możesz nadpisać.
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Rodzaj łącznika i zaślepki</div>
+    <div class="fg">
+      <div class="ig"><label>Rodzaj trzpienia</label>
+        <select id="anchType" onchange="calc()">
+          <option value="stal">Stalowy ocynkowany</option>
+          <option value="poliamid">Poliamidowy (bez mostków)</option>
+          <option value="termo">Z wkładką termiczną</option>
+        </select>
+      </div>
+      <div class="ig"><label>Średnica łącznika (mm)</label>
+        <select id="anchDia" onchange="calcAnchor()">
+          <option value="8">8 mm (talerzyk 60 mm)</option>
+          <option value="10" selected>10 mm (talerzyk 60 mm)</option>
+          <option value="60">Talerzyk powiększony 90 mm</option>
+        </select>
+      </div>
+      <div class="ig"><label>Rodzaj zaślepki</label>
+        <select id="capType" onchange="calc()">
+          <option value="0">Brak zaślepek</option>
+          <option value="eps_bialy">Zaślepka styropianowa biała</option>
+          <option value="eps_grafit">Zaślepka styropianowa grafitowa</option>
+          <option value="welna">Zaślepka z wełny mineralnej</option>
+        </select>
+      </div>
+      <div class="ig"><label>Średnica zaślepki (mm)</label>
+        <select id="capDia" onchange="calc()">
+          <option value="60">60 mm (standard)</option>
+          <option value="70">70 mm</option>
+          <option value="90">90 mm (do talerzyka pow.)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Dobór długości łącznika</div>
+    <div class="fg">
+      <div class="ig"><label>Grubość styropianu (cm)</label>
+        <select id="ancEps" onchange="setVariant(+this.value)">
+          <option value="5">5</option><option value="8">8</option><option value="10">10</option>
+          <option value="12">12</option><option value="14">14</option><option value="15" selected>15</option>
+          <option value="16">16</option><option value="18">18</option><option value="20">20</option>
+          <option value="25">25</option><option value="30">30</option>
+        </select>
+      </div>
+      <div class="ig"><label>Typ podłoża</label>
+        <select id="ancSubst" onchange="calcAnchor()">
+          <option value="50">Cegła pełna / beton (+50mm)</option>
+          <option value="80">Pustak ceramiczny (+80mm)</option>
+          <option value="60">Beton komórkowy (+60mm)</option>
+          <option value="100">Cegła dziurawka (+100mm)</option>
+        </select>
+      </div>
+      <div class="ig"><label>Tynk bazowy (mm)</label><input type="number" id="ancTynk" value="10" min="0" max="30" oninput="calcAnchor()"></div>
+      <div class="ig"><label>Warstwa zbrojna (mm)</label><input type="number" id="ancWarst" value="5" min="3" max="10" oninput="calcAnchor()"></div>
+    </div>
+    <div id="anchorResult" style="margin-top:12px"></div>
+  </div>
+  <div class="sec-head" style="margin-top:16px">Tabela długości wg EPS i podłoża</div>
+  <div class="tw">
+    <table class="t"><thead><tr><th>EPS</th><th>Cegła/beton</th><th>Pustak</th><th>Bet.kom.</th><th>Dziurawka</th><th>Ilość szt.</th></tr></thead><tbody id="anchorTableBody"></tbody></table>
+  </div>
+  <div class="card">
+    <div class="card-title">Własne pozycje — Łączniki</div>
+    <div id="custom-lacze"></div>
+    <div class="btn-row" style="margin-top:8px;margin-bottom:0">
+      <button class="btn sm" onclick="openLibraryPicker('lacze')">📚 Z biblioteki</button>
+      <button class="btn sm" onclick="addCustom('lacze')">+ Własna pozycja</button>
+    </div>
+  </div>
+  <div class="note"><strong>Trzpień:</strong> Stalowy → cegła pełna, beton. Poliamidowy → pustak ceramiczny, beton komórkowy. Z wkładką termiczną → budynki ≥20m. Wybrany: <span id="ancTypeLbl" style="color:var(--acc2)"></span></div>
+</div>
+</div>
+
+<!-- ════════ CENY ════════ -->
+<div class="tab-panel" id="tab-ceny">
+<div class="wrap">
+  <div class="sec-head">Edytowalne ceny jednostkowe</div>
+  <div class="card">
+    <p style="font-size:.69rem;color:var(--mut);margin-bottom:10px">Zmień wartości — aktualizacja na bieżąco. Te ceny używane gdy główna hurtownia = „ceny ręczne". <b>Kliknij chip z ceną</b> aby wstawić wartość z biblioteki.</p>
+    <div class="fg fg2" id="pricesGrid"></div>
+  </div>
+
+  <!-- BIBLIOTEKA ROBOCIZNY — szybkie ustawianie stawek prac ETICS -->
+  <div class="sec-head">Biblioteka robocizny (zł/jedn.)</div>
+  <div class="card" style="background:linear-gradient(135deg,rgba(91,156,246,.06),rgba(167,139,250,.04));border-color:var(--blu)">
+    <div class="card-title" style="color:var(--blu)">🔧 Stawki dla prac dodatkowych</div>
+    <p style="font-size:.69rem;color:var(--mut);margin-bottom:10px">Aktualizuje stawki w zakładce <b>Prace dodatkowe</b> i pole <b>Robocizna ETICS</b>. Każda pozycja pokazuje zakres rynkowy — kliknij średnią / niską / wysoką.</p>
+    <div id="laborLibList"></div>
+  </div>
+
+  <div class="sec-head">Koszt całkowity — wybrany wariant</div>
+  <div id="costSection"></div>
+  <div class="sec-head">Wszystkie warianty</div>
+  <div class="tw">
+    <table class="t"><thead><tr><th>EPS</th><th>Styropian</th><th>Mat.</th><th>Prace</th><th>Ruszt.</th><th>Robocizna</th><th>RAZEM</th><th>zł/m²</th></tr></thead><tbody id="costTableBody"></tbody></table>
+  </div>
+</div>
+</div>
+
+<!-- ════════ PORÓWNANIE ════════ -->
+<div class="tab-panel" id="tab-porownanie">
+<div class="wrap">
+  <div class="sec-head">Źródła cen</div>
+  <div class="card">
+    <div class="card-title">Własne źródła</div>
+    <div id="sourcesContainer"></div>
+    <div class="btn-row" style="margin-top:8px">
+      <button class="btn sm" onclick="addSource('url')">+ URL hurtowni</button>
+      <button class="btn sm" onclick="addSource('file')">+ Wgraj cennik CSV</button>
+    </div>
+    <input type="file" id="fileInput" accept=".csv,.txt" style="display:none" onchange="parseCSVFile(event)">
+  </div>
+  <div class="sec-head">Aktualizacja cen</div>
+  <div class="card">
+    <p style="font-size:.69rem;color:var(--mut);margin-bottom:6px">AI przeszuka <strong style="color:var(--txt)">mega1000.pl · styro24.pl · Castorama/Leroy Merlin</strong> + dodane źródła. Wymaga klucza API Anthropic (zapisywany lokalnie). Bez klucza działa cennik referencyjny.</p>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:7px 10px;background:var(--card2);border:1px solid var(--brd);border-radius:8px">
+      <span style="font-size:1rem">📅</span>
+      <div style="flex:1">
+        <div style="font-size:.62rem;color:var(--mut);text-transform:uppercase;letter-spacing:.06em">Data aktualnego cennika</div>
+        <div style="font-size:.85rem;font-weight:700;color:var(--acc2)" class="price-date-label">—</div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn pri" id="btnRefresh" onclick="refreshPrices()">🔄 Aktualizuj ceny</button>
+      <button class="btn grn" onclick="applyBestPrices()">✅ Zastosuj najniższe</button>
+      <button class="btn" onclick="promptApiKey()">🔑 Klucz API</button>
+    </div>
+    <div id="aiStatus" style="display:none"></div>
+  </div>
+  <div class="sec-head">Porównanie cen</div>
+  <div id="priceCompareSection"><div class="note">Dane referencyjne ładowane automatycznie. Kliknij "Aktualizuj ceny" aby pobrać aktualne.</div></div>
+</div>
+</div>
+
+<!-- ════════ WYCENA ════════ -->
+<div class="tab-panel" id="tab-wycena">
+<div class="wrap">
+  <div class="sec-head">Pełna wycena projektu</div>
+
+  <!-- opcje rusztowania -->
+  <div class="toggle-rusz">
+    <input type="checkbox" id="rusz-toggle" checked onchange="calc()">
+    <label for="rusz-toggle">Uwzględnij rusztowanie w wycenie</label>
+    <span id="rusz-toggle-cost" style="font-size:.78rem;font-weight:700;color:var(--acc2)"></span>
+  </div>
+
+  <!-- przyciski eksportu -->
+  <div class="btn-row">
+    <button class="btn pri" onclick="exportPDF('full')">📄 PDF — pełna wycena</button>
+    <button class="btn" onclick="exportPDF('materialy')">📦 PDF — tylko materiały</button>
+    <button class="btn" onclick="exportCSVFull()">⬇ CSV</button>
+    <button class="btn" onclick="window.print()">🖨 Drukuj</button>
+    <button class="btn" onclick="resetWycenaEdits()" title="Przywróć ceny i ilości obliczone automatycznie">↺ Reset edycji</button>
+  </div>
+
+  <!-- zamówienie i zapytanie materiałowe -->
+  <div class="card" style="margin-top:6px;background:linear-gradient(135deg,rgba(62,207,142,.08),rgba(91,156,246,.05));border-color:var(--grn)">
+    <div class="card-title" style="color:var(--grn)">🧾 Zamówienie i zapytanie materiałowe</div>
+    <p style="font-size:.68rem;color:var(--mut);margin-bottom:9px">Generuje dokument dla hurtowni z zestawienia materiałów z wyceny. <b>Zamówienie</b> zawiera ceny i wartości; <b>zapytanie ofertowe</b> ma puste pola na ofertę dostawcy.</p>
+    <div class="btn-row" style="margin-bottom:6px">
+      <button class="btn grn" onclick="exportOrderPDF('order')">🧾 PDF — zamówienie</button>
+      <button class="btn" onclick="exportOrderCSV('order')">⬇ CSV — zamówienie</button>
+    </div>
+    <div class="btn-row" style="margin-bottom:0">
+      <button class="btn" onclick="exportOrderPDF('inquiry')">✉ PDF — zapytanie ofertowe</button>
+      <button class="btn" onclick="exportOrderCSV('inquiry')">⬇ CSV — zapytanie</button>
+    </div>
+  </div>
+
+  <!-- dane zleceniodawcy -->
+  <div id="wycena-editor">
+    <div class="we-section">
+      <div class="we-title">Dane zleceniodawcy i projektu</div>
+      <div class="fg">
+        <div class="ig"><label>Zamawiający / Inwestor</label><input type="text" id="wycena-klient" placeholder="Jan Kowalski" oninput="updateWycenaSummary()"></div>
+        <div class="ig"><label>Adres budowy</label><input type="text" id="wycena-adres" placeholder="ul. Budowlana 1, Warszawa" oninput="updateWycenaSummary()"></div>
+        <div class="ig"><label>Data sporządzenia</label><input type="date" id="wycena-data" oninput="updateWycenaSummary()"></div>
+        <div class="ig"><label>Wykonawca / Firma</label><input type="text" id="wycena-wyk" placeholder="Nazwa firmy wykonawczej" oninput="updateWycenaSummary()"></div>
+        <div class="ig"><label>Nr wyceny / Oferty</label><input type="text" id="wycena-nr" placeholder="np. WYC/2026/001" oninput="updateWycenaSummary()"></div>
+        <div class="ig"><label>Termin realizacji</label><input type="text" id="wycena-termin" placeholder="np. 6–8 tygodni" oninput="updateWycenaSummary()"></div>
+      </div>
+    </div>
+
+    <!-- SEKCJA MATERIAŁY -->
+    <div class="we-title" style="margin-top:16px;margin-bottom:6px">Sekcja I — Materiały budowlane
+      <span style="float:right"><button class="btn sm" onclick="exportPDF('materialy')" style="font-size:.62rem;padding:4px 9px">📦 PDF materiały</button></span>
+    </div>
+    <div class="wys-head" style="margin-top:0">
+      <div class="wys-label"><div class="icon" style="background:rgba(91,156,246,.2)">🧱</div>A. Izolacja termiczna EPS</div>
+      <div class="wys-subtotal" id="wys-subtot-eps">—</div>
+    </div>
+    <div class="wys-body" id="wys-body-eps"></div>
+
+    <div class="wys-head">
+      <div class="wys-label"><div class="icon" style="background:rgba(232,84,26,.18)">⚙</div>B. Kleje, masy, siatka</div>
+      <div class="wys-subtotal" id="wys-subtot-kleje">—</div>
+    </div>
+    <div class="wys-body" id="wys-body-kleje"></div>
+
+    <div class="wys-head">
+      <div class="wys-label"><div class="icon" style="background:rgba(167,139,250,.2)">🎨</div>C. Tynk, farba, grunty</div>
+      <div class="wys-subtotal" id="wys-subtot-tynk">—</div>
+    </div>
+    <div class="wys-body" id="wys-body-tynk"></div>
+
+    <div class="wys-head">
+      <div class="wys-label"><div class="icon" style="background:rgba(62,207,142,.15)">🔩</div>D. Łączniki i zaślepki</div>
+      <div class="wys-subtotal" id="wys-subtot-lacze">—</div>
+    </div>
+    <div class="wys-body" id="wys-body-lacze"></div>
+
+    <div class="wys-head">
+      <div class="wys-label"><div class="icon" style="background:rgba(245,166,35,.15)">📐</div>E. Profile, listwy, obróbki</div>
+      <div class="wys-subtotal" id="wys-subtot-profile">—</div>
+    </div>
+    <div class="wys-body" id="wys-body-profile"></div>
+
+    <div class="wys-head">
+      <div class="wys-label"><div class="icon" style="background:rgba(240,106,106,.15)">🪟</div>F. Parapety i obróbki blacharskie</div>
+      <div class="wys-subtotal" id="wys-subtot-parapety">—</div>
+    </div>
+    <div class="wys-body" id="wys-body-parapety"></div>
+
+    <div class="wys-head">
+      <div class="wys-label"><div class="icon" style="background:rgba(91,156,246,.15)">🧴</div>G. Taśmy, folie, pianka</div>
+      <div class="wys-subtotal" id="wys-subtot-tasmy">—</div>
+    </div>
+    <div class="wys-body" id="wys-body-tasmy"></div>
+
+    <div class="wys-head" id="wys-head-custom-mat">
+      <div class="wys-label"><div class="icon" style="background:rgba(167,139,250,.15)">◆</div>H. Własne materiały</div>
+      <div class="wys-subtotal" id="wys-subtot-custom">—</div>
+    </div>
+    <div class="wys-body" id="wys-body-custom"></div>
+
+    <!-- SEKCJA ROBOCIZNA -->
+    <div class="we-title" style="margin-top:18px;margin-bottom:6px">Sekcja II — Robocizna i usługi</div>
+    <div class="wys-head" style="margin-top:0">
+      <div class="wys-label"><div class="icon" style="background:rgba(232,84,26,.2)">👷</div>I. Robocizna montażowa</div>
+      <div class="wys-subtotal" id="wys-subtot-labor">—</div>
+    </div>
+    <div class="wys-body" id="wys-body-labor"></div>
+
+    <div class="wys-head">
+      <div class="wys-label"><div class="icon" style="background:rgba(91,156,246,.2)">🏗</div>J. Rusztowanie</div>
+      <div class="wys-subtotal" id="wys-subtot-rusz">—</div>
+    </div>
+    <div class="wys-body" id="wys-body-rusz"></div>
+
+    <div class="wys-head">
+      <div class="wys-label"><div class="icon" style="background:rgba(62,207,142,.15)">🔧</div>K. Prace dodatkowe i przygotowawcze</div>
+      <div class="wys-subtotal" id="wys-subtot-prace">—</div>
+    </div>
+    <div class="wys-body" id="wys-body-prace"></div>
+
+    <div class="wys-head" id="wys-head-custom-rob">
+      <div class="wys-label"><div class="icon" style="background:rgba(167,139,250,.15)">◆</div>L. Własne prace / usługi</div>
+      <div class="wys-subtotal" id="wys-subtot-custom-rob">—</div>
+    </div>
+    <div class="wys-body" id="wys-body-custom-rob"></div>
+
+    <div class="we-section" style="margin-top:14px">
+      <div class="we-title">Uwagi do wyceny</div>
+      <textarea id="wycena-notes" rows="3" style="background:var(--card);border:1px solid var(--brd);border-radius:7px;color:var(--txt);padding:8px;width:100%;outline:none;font-size:.79rem;resize:vertical;" placeholder="Warunki płatności, gwarancja, uwagi techniczne, wyłączenia z zakresu…" oninput="updateWycenaSummary()"></textarea>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:10px">
+    <div class="card-title">Podsumowanie wyceny</div>
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:14px">
+      <span style="font-size:.72rem;color:var(--mut);font-weight:600">Narzut dla klienta:</span>
+      <input type="number" id="client-margin-input" value="0" min="0" max="200" step="1"
+        style="width:58px;padding:4px 7px;border-radius:7px;border:1px solid var(--brd);background:var(--card2);color:var(--txt);font-size:.79rem;text-align:center"
+        oninput="updClientMargin(+this.value)">
+      <span style="font-size:.72rem;color:var(--mut)">%</span>
+    </div>
+    <div id="wycena-summary"></div>
+  </div>
+</div>
+</div>
+
+<!-- ════════ RUSZTOWANIE ════════ -->
+<div class="tab-panel" id="tab-rusztowanie">
+<div class="wrap">
+  <div class="sec-head">Rusztowanie elewacyjne</div>
+  <div class="toggle-rusz" style="margin-bottom:12px">
+    <input type="checkbox" id="rusz-toggle2" checked onchange="document.getElementById('rusz-toggle').checked=this.checked;calc()">
+    <label for="rusz-toggle2" style="font-size:.82rem;font-weight:600">Uwzględnij rusztowanie w wycenie i kosztorysie</label>
+    <span id="rusz-toggle-cost2" style="font-size:.78rem;font-weight:700;color:var(--acc2)"></span>
+  </div>
+  <div class="card" id="rusz-card">
+    <div class="fg fg2">
+      <div class="ig"><label>Czas prac (tygodnie)</label><input type="number" id="ruszW" value="6" min="1" oninput="debCalc()"></div>
+      <div class="ig"><label>Dzierżawa (zł/m²/mies.)</label><input type="number" id="ruszP" value="8" min="0" step=".5" oninput="debCalc()"></div>
+      <div class="ig"><label>Montaż (zł/m²)</label><input type="number" id="ruszM" value="12" min="0" oninput="debCalc()"></div>
+      <div class="ig"><label>Siatka ochronna (zł/m²)</label><input type="number" id="ruszS" value="4" min="0" step=".5" oninput="debCalc()"></div>
+    </div>
+    <div class="rgrid" id="ruszStats"></div>
+  </div>
+  <div class="note"><strong>Pow. rusztowania:</strong> ×1,18 pow. elewacji (trójkąty narożne, balkony).</div>
+  <div class="note"><strong>Montaż + demontaż:</strong> 2 × stawka montażu — koszt jednorazowy.</div>
+  <div class="note"><strong>Wyłączenie:</strong> Odznacz checkbox aby usunąć rusztowanie z wyceny — np. gdy klient zapewnia rusztowanie własne lub umawia je osobno.</div>
+</div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay hidden" id="modal-proj">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-proj')">✕</button>
+    <h3>Projekt</h3>
+    <div class="ig" style="margin-bottom:10px"><label>Nazwa projektu</label><input type="text" id="proj-name-input" placeholder="np. Dom Kowalski — elewacja"></div>
+    <div class="btn-row"><button class="btn pri" onclick="saveNewProject()">💾 Zapisz</button><button class="btn" onclick="closeModal('modal-proj')">Anuluj</button></div>
+    <div style="margin-top:14px;border-top:1px solid var(--brd);padding-top:10px">
+      <div class="card-title" style="margin-bottom:8px">Zapisane projekty</div>
+      <div id="proj-list"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="modal-libadd">
+  <div class="modal"></div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PWA: Service Worker + IndexedDB + Install
+═══════════════════════════════════════ -->
+<div id="install-banner">
+  <img src="icons/icon-96.png" alt="ElewacjaPro">
+  <div class="ib-text">
+    <div class="ib-title">Zainstaluj ElewacjaPro</div>
+    <div class="ib-sub">Działaj offline · Ikonka na ekranie głównym</div>
+  </div>
+  <button id="ib-install">Zainstaluj</button>
+  <button id="ib-dismiss" aria-label="Zamknij">✕</button>
+</div>
+
+<div id="update-banner">
+  🔄 Dostępna aktualizacja aplikacji
+  <button onclick="updateApp()" style="background:rgba(0,0,0,.2);border:none;border-radius:6px;padding:4px 12px;font-size:.78rem;font-weight:700;cursor:pointer;color:#0b0d14">Odśwież</button>
+</div>
+
+<div id="offline-chip">📵 OFFLINE</div>
+<div id="ptr-indicator">↓ Zwolnij aby odświeżyć</div>
+<div id="validation-banner"></div>
+
+<!-- BOTTOM NAV (mobile) -->
+<nav id="bottom-nav">
+  <button class="bn-item active" onclick="swTab('ustawienia');bnActive(this)" data-tab="ustawienia">
+    <span class="bn-icon">⚙</span>Dane
+  </button>
+  <button class="bn-item" onclick="swTab('warianty');bnActive(this)" data-tab="warianty">
+    <span class="bn-icon">📐</span>EPS
+  </button>
+  <button class="bn-item" onclick="swTab('materialy');bnActive(this)" data-tab="materialy">
+    <span class="bn-icon">🧱</span>Materiały
+  </button>
+  <button class="bn-item" onclick="swTab('ceny');bnActive(this)" data-tab="ceny">
+    <span class="bn-icon">💰</span>Ceny
+  </button>
+  <button class="bn-item" onclick="swTab('wycena');bnActive(this)" data-tab="wycena">
+    <span class="bn-icon">📄</span>Wycena
+  </button>
+  <button class="bn-item" onclick="showMoreTabs()" id="bn-more">
+    <span class="bn-icon">⋯</span>Więcej
+  </button>
+</nav>
+
+<!-- MORE TABS SHEET -->
+<div id="more-sheet" style="position:fixed;bottom:0;left:0;right:0;z-index:400;background:var(--sur);border-top:1px solid var(--brd);border-radius:20px 20px 0 0;padding:20px 16px calc(20px + var(--safe-bot));transform:translateY(100%);transition:transform .3s;max-height:60vh;overflow-y:auto;">
+  <div class="swipe-hint"></div>
+  <div style="font-family:var(--font-head);font-size:1rem;font-weight:700;color:var(--mut);margin-bottom:14px;margin-top:8px;text-align:center;letter-spacing:.06em;text-transform:uppercase">Więcej zakładek</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <button class="btn" style="justify-content:flex-start;gap:8px;min-height:50px" onclick="swTab('biblioteka');hideMore()"><span style="font-size:1.1rem">📚</span>Biblioteka</button>
+    <button class="btn" style="justify-content:flex-start;gap:8px;min-height:50px" onclick="swTab('parapety');hideMore()"><span style="font-size:1.1rem">🪟</span>Parapety</button>
+    <button class="btn" style="justify-content:flex-start;gap:8px;min-height:50px" onclick="swTab('dodatki');hideMore()"><span style="font-size:1.1rem">🔧</span>Prace dod.</button>
+    <button class="btn" style="justify-content:flex-start;gap:8px;min-height:50px" onclick="swTab('lacze');hideMore()"><span style="font-size:1.1rem">🔩</span>Łączniki</button>
+    <button class="btn" style="justify-content:flex-start;gap:8px;min-height:50px" onclick="swTab('porownanie');hideMore()"><span style="font-size:1.1rem">📊</span>Porównanie</button>
+    <button class="btn" style="justify-content:flex-start;gap:8px;min-height:50px" onclick="swTab('rusztowanie');hideMore()"><span style="font-size:1.1rem">🏗</span>Rusztowanie</button>
+    <button class="btn pri" style="justify-content:flex-start;gap:8px;min-height:50px" onclick="newProjectModal();hideMore()"><span style="font-size:1.1rem">💾</span>Projekty</button>
+  </div>
+  <div style="margin-top:12px;display:flex;gap:8px">
+    <button class="btn" style="flex:1;min-height:46px;justify-content:center;gap:6px" onclick="exportPDF('full');hideMore()">📄 PDF wycena</button>
+    <button class="btn" style="flex:1;min-height:46px;justify-content:center;gap:6px" onclick="exportPDF('materialy');hideMore()">📦 PDF materiały</button>
+  </div>
+  <div style="margin-top:8px;display:flex;gap:8px">
+    <button class="btn grn" style="flex:1;min-height:46px;justify-content:center;gap:6px" onclick="exportOrderPDF('order');hideMore()">🧾 Zamówienie</button>
+    <button class="btn" style="flex:1;min-height:46px;justify-content:center;gap:6px" onclick="exportOrderPDF('inquiry');hideMore()">✉ Zapytanie</button>
+  </div>
+  <div style="margin-top:8px;display:flex;gap:8px">
+    <button class="btn" style="flex:1;min-height:46px;justify-content:center;gap:6px" onclick="exportProjectJSON()">💾 Eksport JSON</button>
+    <button class="btn" style="flex:1;min-height:46px;justify-content:center;gap:6px" onclick="document.getElementById('import-json-input').click()">📂 Import JSON</button>
+  </div>
+  <input type="file" id="import-json-input" accept=".json" style="display:none" onchange="importProjectJSON(event)">
+  <button class="btn" style="width:100%;margin-top:8px;min-height:44px;justify-content:center;font-size:.75rem;color:var(--mut)" onclick="hideMore()">Zamknij ✕</button>
+</div>
+<div id="more-overlay" style="display:none;position:fixed;inset:0;z-index:390;background:rgba(0,0,0,.5)" onclick="hideMore()"></div>
+
+<script type="module" src="src/main.js"></script>
+
+
+</body>
+</html>
