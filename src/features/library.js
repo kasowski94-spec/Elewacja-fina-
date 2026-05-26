@@ -8,7 +8,7 @@ import {
   priceMode, setPriceMode,
 } from '../store/state.js';
 import { customItems } from '../store/state.js';
-import { fmt } from '../utils/format.js';
+import { fmt, escAttr } from '../utils/format.js';
 
 function vatFor(isLabor) { return priceMode === 'brutto' ? (isLabor ? VAT_LABOR : VAT_MAT) : 1; }
 
@@ -163,7 +163,7 @@ export function showLibAddModal(it, defTab, isLabor) {
       </select>
     </div>
     <div class="fg fg2" style="margin-bottom:9px">
-      <div class="ig"><label>Nazwa pozycji</label><input type="text" id="libadd-name" value="${it.name}"></div>
+      <div class="ig"><label>Nazwa pozycji</label><input type="text" id="libadd-name" value="${escAttr(it.name)}"></div>
       <div class="ig"><label>Jednostka</label>
         <select id="libadd-unit">
           ${['szt.','mb','m²','m³','kg','l','worek','ark','kpl','rbg'].map(u => `<option value="${u}" ${it.unit === u ? 'selected' : ''}>${u}</option>`).join('')}

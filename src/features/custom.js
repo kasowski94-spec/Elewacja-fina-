@@ -3,7 +3,7 @@
 import { CUSTOM_TABS } from '../data/constants.js';
 import { COMMON_ITEMS } from '../data/library.js';
 import { customItems } from '../store/state.js';
-import { pln } from '../utils/format.js';
+import { pln, escAttr } from '../utils/format.js';
 
 const UNITS = ['szt.','mb','m²','m³','kg','l','worek','ark','kpl','rbg'];
 
@@ -39,7 +39,7 @@ export function renderCustom(tab) {
         <span id="custtot-${tab}-${i}" style="font-size:.72rem;color:var(--grn);margin-left:auto;font-weight:700">${it.enabled ? pln(it.qty * it.price) : 'wyłączona'}</span>
       </div>
       <div class="fg fg2">
-        <div class="ig"><label>Nazwa pozycji</label><input type="text" list="common-items-list" value="${it.name}" placeholder="wybierz z listy lub wpisz…" oninput="window.updCustom('${tab}',${i},'name',this.value)"></div>
+        <div class="ig"><label>Nazwa pozycji</label><input type="text" list="common-items-list" value="${escAttr(it.name)}" placeholder="wybierz z listy lub wpisz…" oninput="window.updCustom('${tab}',${i},'name',this.value)"></div>
         <div class="ig"><label>Jednostka</label>
           <select onchange="window.updCustom('${tab}',${i},'unit',this.value)">
             ${UNITS.map(u => `<option value="${u}" ${it.unit === u ? 'selected' : ''}>${u}</option>`).join('')}

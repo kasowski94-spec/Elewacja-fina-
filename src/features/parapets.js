@@ -2,7 +2,7 @@
 
 import { PARAPET_DEFAULTS, SHEET_TYPES } from '../data/constants.js';
 import { parapets, setParapets } from '../store/state.js';
-import { fmt, pln } from '../utils/format.js';
+import { fmt, pln, escAttr } from '../utils/format.js';
 
 export function parapetCalc(p) {
   const devMm = p.width + 2 * (p.bend || 0);
@@ -49,7 +49,7 @@ export function renderParapets() {
       <button class="sub-del" onclick="window.removeParapet(${i})">✕</button>
       <div class="sub-title">Parapet #${i + 1}</div>
       <div class="fg fg2">
-        <div class="ig"><label>Nazwa</label><input type="text" value="${p.name}" oninput="window.updParapet(${i},'name',this.value)"></div>
+        <div class="ig"><label>Nazwa</label><input type="text" value="${escAttr(p.name)}" oninput="window.updParapet(${i},'name',this.value)"></div>
         <div class="ig"><label>Materiał blachy</label>
           <select onchange="window.updParapetMaterial(${i},this.value)">
             ${Object.entries(SHEET_TYPES).map(([k, v]) => `<option value="${k}" ${p.material === k ? 'selected' : ''}>${v.name}</option>`).join('')}

@@ -301,23 +301,26 @@ export function updateWycenaSummary() {
   const margin = clientMargin / 100;
 
   // W trybie netto: ceny w wierszach są netto → oblicz brutto do wyświetlenia
-  const matBrutto = isBrutto ? matTotal : matTotal * 1.08;
-  const laborBrutto = isBrutto ? laborTotal : laborTotal * 1.23;
+  const matBrutto = isBrutto ? matTotal : matTotal * VAT_MAT;
+  const laborBrutto = isBrutto ? laborTotal : laborTotal * VAT_LABOR;
   const grandBrutto = matBrutto + laborBrutto;
 
-  // Cena klienta (narzut od cen wierszy) + ewentualny VAT jeśli tryb netto
+  // Cena klienta (narzut od cen wierszy) + VAT jeśli tryb netto
   const clientTotal = grandTotal * (1 + margin);
-  const clientBrutto = isBrutto ? clientTotal : clientTotal * 1.08 * (matTotal / grandTotal || 0.85) + clientTotal * 1.23 * (laborTotal / grandTotal || 0.15);
   const profit = grandTotal * margin;
 
   const dispPerM2 = area > 0 ? pln(grandBrutto / area) + ' / m²' : '';
-  const clientPerM2 = area > 0 ? pln((isBrutto ? clientTotal : clientTotal + clientTotal * 0.08) / area) + ' / m²' : '';
+  // Oferta dla klienta brutto: stosuj VAT_MAT/VAT_LABOR osobno dla materiałów i robocizny
+  const clientDisplayBrutto = isBrutto
+    ? clientTotal
+    : matTotal * (1 + margin) * VAT_MAT + laborTotal * (1 + margin) * VAT_LABOR;
+  const clientPerM2 = area > 0 ? pln(clientDisplayBrutto / area) + ' / m²' : '';
 
   const row = (lbl, val, cls) => `<div class="ws-row"><span>${lbl}</span><span class="${cls || ''}">${pln(val)}</span></div>`;
 
   const vatBlock = isBrutto ? '' : `
-    <div class="ws-row"><span>VAT materiały 8%</span><span>${pln(matTotal * 0.08)}</span></div>
-    <div class="ws-row"><span>VAT robocizna 23%</span><span>${pln(laborTotal * 0.23)}</span></div>`;
+    <div class="ws-row"><span>VAT materiały ${Math.round((VAT_MAT - 1) * 100)}%</span><span>${pln(matTotal * (VAT_MAT - 1))}</span></div>
+    <div class="ws-row"><span>VAT robocizna ${Math.round((VAT_LABOR - 1) * 100)}%</span><span>${pln(laborTotal * (VAT_LABOR - 1))}</span></div>`;
 
   const clientPanel = clientMargin > 0 ? `
     <div class="ws-panel-label ws-panel-label-client">🧾 Oferta dla klienta — narzut ${clientMargin}%</div>
@@ -329,15 +332,15 @@ export function updateWycenaSummary() {
     </div>
     <div class="ws-final" style="border-color:rgba(62,207,142,.45);background:linear-gradient(135deg,rgba(62,207,142,.08),rgba(62,207,142,.02))">
       ${isBrutto ? '' : `
-        <div class="ws-row"><span>VAT materiały 8%</span><span>${pln(matTotal * (1 + margin) * 0.08)}</span></div>
-        <div class="ws-row"><span>VAT robocizna 23%</span><span>${pln(laborTotal * (1 + margin) * 0.23)}</span></div>`}
+        <div class="ws-row"><span>VAT materiały ${Math.round((VAT_MAT - 1) * 100)}%</span><span>${pln(matTotal * (1 + margin) * (VAT_MAT - 1))}</span></div>
+        <div class="ws-row"><span>VAT robocizna ${Math.round((VAT_LABOR - 1) * 100)}%</span><span>${pln(laborTotal * (1 + margin) * (VAT_LABOR - 1))}</span></div>`}
       <div class="ws-brutto" style="border-color:var(--grn)">
         <div>
           <div class="ws-bl" style="color:var(--grn)">${isBrutto ? 'Oferta brutto' : 'Oferta brutto klienta'}</div>
           ${area > 0 ? `<div class="ws-perm">≈ ${clientPerM2}</div>` : ''}
           <div class="ws-perm" style="color:var(--grn);font-weight:700">Zysk: +${pln(profit)}</div>
         </div>
-        <div class="ws-bv" style="color:var(--grn)">${pln(isBrutto ? clientTotal : matTotal * (1 + margin) * 1.08 + laborTotal * (1 + margin) * 1.23)}</div>
+        <div class="ws-bv" style="color:var(--grn)">${pln(clientDisplayBrutto)}</div>
       </div>
     </div>` : '';
 

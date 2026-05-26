@@ -1,14 +1,14 @@
-// ElewacjaPro Service Worker v10.0
-const CACHE = 'elewacja-v10';
-const FONTS = 'elewacja-fonts-v10';
+// ElewacjaPro Service Worker v11.0
+const CACHE = 'elewacja-v11';
+const FONTS = 'elewacja-fonts-v11';
 
 const CORE = [
   './',
   './index.html',
   './manifest.json',
-  './app-bundle.js',
   './src/styles/main.css',
   './jspdf.min.js',
+  './pdf-font.js',
 ];
 
 self.addEventListener('install', e => {

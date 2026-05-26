@@ -1,7 +1,7 @@
 // ════════════ PDF / CSV EXPORT ════════════
 
 import { THICK, SHOP_LABELS, MAT_SECTIONS, LABOR_SECTIONS } from '../data/constants.js';
-import { wycenaRows, selectedVariant, projects, currentProject } from '../store/state.js';
+import { wycenaRows, selectedVariant, projects, currentProject, priceMode } from '../store/state.js';
 import { gv, gs, gvn } from '../utils/dom.js';
 import { fmt } from '../utils/format.js';
 import { dl } from '../utils/download.js';
@@ -173,8 +173,10 @@ export async function exportPDF(mode = 'full') {
   flushSecTotal();
 
   y += 6; if (y > 250) { doc.addPage(); y = 24; }
-  const vat = total * 0.08;
-  const boxH = mode === 'materialy' ? 26 : 34;
+  const isBruttoPDF = priceMode === 'brutto';
+  // W trybie brutto ceny wierszy już zawierają VAT — nie dodawaj ponownie
+  const displayBrutto = isBruttoPDF ? total : total * 1.08;
+  const boxH = mode === 'materialy' ? (isBruttoPDF ? 20 : 26) : (isBruttoPDF ? 26 : 34);
   doc.setFillColor(18, 21, 31); doc.roundedRect(108, y, 94, boxH, 2, 2, 'F');
   doc.setTextColor(200, 205, 220); doc.setFont(FONT, 'normal'); doc.setFontSize(8.5);
   let yy = y + 8;
@@ -183,15 +185,17 @@ export async function exportPDF(mode = 'full') {
     const labT = rows.filter(r => LABOR_SECTIONS.includes(r.section)).reduce((s, r) => s + (r.qty || 0) * (r.price || 0), 0);
     doc.text('Materiały:', 114, yy); doc.text(fmt(matT, 0) + ' zł', 196, yy, { align: 'right' }); yy += 5.5;
     doc.text('Robocizna i usługi:', 114, yy); doc.text(fmt(labT, 0) + ' zł', 196, yy, { align: 'right' }); yy += 5.5;
-    doc.text('Razem netto:', 114, yy); doc.text(fmt(total, 0) + ' zł', 196, yy, { align: 'right' }); yy += 5.5;
-    doc.text('VAT 8%:', 114, yy); doc.text(fmt(vat, 0) + ' zł', 196, yy, { align: 'right' }); yy += 6.5;
+    doc.text(isBruttoPDF ? 'Razem brutto:' : 'Razem netto:', 114, yy); doc.text(fmt(total, 0) + ' zł', 196, yy, { align: 'right' }); yy += 5.5;
+    if (!isBruttoPDF) { doc.text('VAT ~8%:', 114, yy); doc.text(fmt(total * 0.08, 0) + ' zł', 196, yy, { align: 'right' }); yy += 6.5; }
+    else { yy += 1; }
   } else {
-    doc.text('Materiały netto:', 114, yy); doc.text(fmt(total, 0) + ' zł', 196, yy, { align: 'right' }); yy += 5.5;
-    doc.text('VAT 8%:', 114, yy); doc.text(fmt(vat, 0) + ' zł', 196, yy, { align: 'right' }); yy += 6.5;
+    doc.text(isBruttoPDF ? 'Materiały brutto:' : 'Materiały netto:', 114, yy); doc.text(fmt(total, 0) + ' zł', 196, yy, { align: 'right' }); yy += 5.5;
+    if (!isBruttoPDF) { doc.text('VAT 8%:', 114, yy); doc.text(fmt(total * 0.08, 0) + ' zł', 196, yy, { align: 'right' }); yy += 6.5; }
+    else { yy += 1; }
   }
   doc.setTextColor(245, 166, 35); doc.setFont(FONT, 'bold'); doc.setFontSize(11);
   doc.text(mode === 'materialy' ? 'BRUTTO:' : 'RAZEM BRUTTO:', 114, yy);
-  doc.text(fmt(total + vat, 0) + ' zł', 196, yy, { align: 'right' });
+  doc.text(fmt(displayBrutto, 0) + ' zł', 196, yy, { align: 'right' });
 
   if (nt) {
     let ny = y + boxH + 8; if (ny > 262) { doc.addPage(); ny = 24; }
