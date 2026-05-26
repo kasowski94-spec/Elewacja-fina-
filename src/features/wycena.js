@@ -14,6 +14,7 @@ export function rowKey(r) {
 export function buildWycenaRows() {
   const area = gvn('area', 350), waste = gvn('waste', 5) / 100, lambda = gsn('epsType', 0.033);
   const aW = area * (1 + waste), t = selectedVariant;
+  const adhesiveRate = gvn('adhesiveRate', 4), meshRate = gvn('meshRate', 5.5);
   const plasterKg = gsn('plasterType', 3.2), paintRate = gsn('paintType', 0);
   const primerRate = gvn('primerRate', 0.15), primerSubRate = gsn('primerSubType', 0.15);
   const bondRate = gsn('bondType', 0);
@@ -45,12 +46,15 @@ export function buildWycenaRows() {
     };
   };
 
+  const epsM3 = +(aW * t / 100).toFixed(2);
+  const epsM3Badge = document.getElementById('eps-m3-badge');
+  if (epsM3Badge) { epsM3Badge.textContent = `≈ ${epsM3} m³`; epsM3Badge.style.display = ''; }
   const secEPS = [
-    mkRow(`Styropian EPS ${t} cm (λ=${lambda.toFixed(3)} W/mK)`, 'm²', aW, 'p_eps', t, 'eps', `Płyty izolacyjne z naddatkiem ${gv('waste') || 5}% — łącznie ${fmt(aW, 1)} m²`),
+    mkRow(`Styropian EPS ${t} cm (λ=${lambda.toFixed(3)} W/mK)`, 'm²', aW, 'p_eps', t, 'eps', `Płyty izolacyjne z naddatkiem ${gv('waste') || 5}% — ${fmt(aW, 1)} m² · objętość: ${epsM3} m³`),
   ];
   const secKleje = [
-    mkRow('Masa klejąca do styropianu', 'kg', area * 4, 'p_adhesive', null, 'kleje', 'Klejenie płyt EPS — metoda obwodowo-punktowa, ~4 kg/m² (~40% pokrycia)'),
-    mkRow('Masa szpachlowa zbrojąca', 'kg', area * 5.5, 'p_meshkg', null, 'kleje', 'Warstwa bazowa z siatką zbrojącą — ~5,5 kg/m²'),
+    mkRow('Masa klejąca do styropianu', 'kg', area * adhesiveRate, 'p_adhesive', null, 'kleje', `Klejenie płyt EPS — metoda obwodowo-punktowa, ${adhesiveRate} kg/m² (~40% pokrycia)`),
+    mkRow('Masa szpachlowa zbrojąca', 'kg', area * meshRate, 'p_meshkg', null, 'kleje', `Warstwa bazowa z siatką zbrojącą — ${meshRate} kg/m²`),
     mkRow('Siatka zbrojąca 145 g/m²', 'm²', aW, 'p_mesh', null, 'kleje', `Z zakładem min. 10 cm na połączeniach — z naddatkiem ${fmt(aW, 1)} m²`),
     ...(bondRate > 0 ? [mkRow('Masa sczepna / preparat szczepny', 'kg', area * bondRate, 'p_bond', null, 'kleje', `Dla podłoży o słabej przyczepności — ${bondRate} kg/m²`)] : []),
   ];
