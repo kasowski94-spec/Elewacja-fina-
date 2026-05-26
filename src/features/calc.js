@@ -236,7 +236,7 @@ export function calc() {
   }
 
   window.buildWycenaRows?.();
-  window.autoSave?.();
+  window.autoSaveDebounced?.();
 }
 
 Object.assign(window, { calc, debCalc, shopPrice });

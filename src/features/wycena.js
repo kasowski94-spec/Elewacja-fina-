@@ -1,6 +1,6 @@
 // ════════════ WYCENA — TABELA KOSZTORYSU ════════════
 
-import { EXTRAS_DEF, FOAM_TYPES, CORNER_MULT, SHOP_MULT, SHOP_LABELS, SHEET_TYPES, VAT_MAT, VAT_LABOR, LABOR_SECTIONS } from '../data/constants.js';
+import { EXTRAS_DEF, FOAM_TYPES, CORNER_MULT, SHOP_MULT, SHOP_LABELS, SHEET_TYPES, VAT_MAT, VAT_LABOR, LABOR_SECTIONS, RUSZ_OVERHANG } from '../data/constants.js';
 import { parapetCalc } from './parapets.js';
 import { getAllCustomItems } from './custom.js';
 import { wycenaRows, setWycenaRows, wycenaManualEdits, setWycenaManualEdits, selectedVariant, priceMode, clientMargin, setClientMargin } from '../store/state.js';
@@ -24,7 +24,7 @@ export function buildWycenaRows() {
   const winStrip = gsn('winStripType', 0), cornerMult = CORNER_MULT[gs('cornerType')] || 1;
   const anchTotal = Math.ceil(area * anch);
   const capTotal = gs('capType') !== '0' ? anchTotal : 0;
-  const ruszArea = area * 1.18;
+  const ruszArea = area * RUSZ_OVERHANG;
   const ruszEnabled = document.getElementById('rusz-toggle')?.checked !== false;
   const shop = gs('mainShop') || 'reczne';
 
@@ -307,7 +307,10 @@ export function updateWycenaSummary() {
 
   // Cena klienta (narzut od cen wierszy) + VAT jeśli tryb netto
   const clientTotal = grandTotal * (1 + margin);
-  const profit = grandTotal * margin;
+  // Zysk wykonawcy zawsze liczony od netto (VAT to przelew do US, nie zysk)
+  const matNet = isBrutto ? matTotal / VAT_MAT : matTotal;
+  const laborNet = isBrutto ? laborTotal / VAT_LABOR : laborTotal;
+  const profit = (matNet + laborNet) * margin;
 
   const dispPerM2 = area > 0 ? pln(grandBrutto / area) + ' / m²' : '';
   // Oferta dla klienta brutto: stosuj VAT_MAT/VAT_LABOR osobno dla materiałów i robocizny

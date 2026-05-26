@@ -45,8 +45,8 @@ export function renderCustom(tab) {
             ${UNITS.map(u => `<option value="${u}" ${it.unit === u ? 'selected' : ''}>${u}</option>`).join('')}
           </select>
         </div>
-        <div class="ig"><label>Ilość</label><input type="number" value="${it.qty}" min="0" step="0.01" oninput="window.updCustom('${tab}',${i},'qty',+this.value)"></div>
-        <div class="ig"><label>Cena jedn. (zł/${it.unit})</label><input type="number" value="${it.price}" min="0" step="0.01" oninput="window.updCustom('${tab}',${i},'price',+this.value)"></div>
+        <div class="ig"><label>Ilość</label><input type="number" value="${escAttr(String(it.qty))}" min="0" step="0.01" oninput="window.updCustom('${tab}',${i},'qty',+this.value)"></div>
+        <div class="ig"><label>Cena jedn. (zł/${escAttr(it.unit)})</label><input type="number" value="${escAttr(String(it.price))}" min="0" step="0.01" oninput="window.updCustom('${tab}',${i},'price',+this.value)"></div>
       </div>
     </div>`).join('');
 }

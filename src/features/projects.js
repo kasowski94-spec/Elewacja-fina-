@@ -5,8 +5,10 @@ import {
   projects, setProjects, currentProject, setCurrentProject,
   customItems, foamItems, setFoamItems, parapets, setParapets,
   wycenaManualEdits, setWycenaManualEdits, selectedVariant,
+  clientMargin, setClientMargin, priceMode,
 } from '../store/state.js';
 import { idbSaveProjects } from '../services/storage.js';
+import { debounce } from '../utils/debounce.js';
 import { gs } from '../utils/dom.js';
 import { PRICE_DEFS } from '../data/constants.js';
 import { EXTRAS_DEF } from '../data/constants.js';
@@ -71,6 +73,7 @@ export function deleteProject(id) {
 export function collectState() {
   const fields = [
     'area','waste','epsType','epsThick','mainShop','wallMat','wallThick','wallU0',
+    'adhesiveRate','meshRate',
     'groundType','primerSubType','bondType','plasterType','paintType','primerRate',
     'buildH','windZone','anchPerM2','anchType','anchDia','capType','capDia',
     'cornerType','winStripType','foilCount','tapeWin','tapeExp','tapeElew','tapeMal',
@@ -83,6 +86,8 @@ export function collectState() {
   fields.forEach(f => { const el = document.getElementById(f); if (el) st[f] = el.value; });
   st.ruszEnabled = document.getElementById('rusz-toggle')?.checked !== false;
   st.selectedVariant = selectedVariant;
+  st.clientMargin = clientMargin;
+  st.priceMode = priceMode;
   st.parapets = structuredClone(parapets);
   st.foamItems = structuredClone(foamItems);
   st.customItems = structuredClone(customItems);
@@ -156,6 +161,16 @@ export function applyState(st) {
       setWycenaManualEdits(st[f] || {});
       return;
     }
+    if (f === 'clientMargin') {
+      setClientMargin(st[f] || 0);
+      const cm = document.getElementById('client-margin-input');
+      if (cm) cm.value = clientMargin;
+      return;
+    }
+    if (f === 'priceMode') {
+      window.togglePriceMode?.(st[f] === 'brutto' ? 'brutto' : 'netto');
+      return;
+    }
     if (f === 'extras') {
       EXTRAS_DEF.forEach(e => {
         const d = st.extras?.[e.id];
@@ -194,6 +209,8 @@ export function autoSave() {
   };
   saveProjects();
 }
+
+export const autoSaveDebounced = debounce(autoSave, 1000);
 
 export function exportProjectJSON() {
   const id = currentProject;
@@ -248,6 +265,6 @@ export function importProjectJSON(event) {
 // Expose to global scope for HTML attribute handlers
 Object.assign(window, {
   newProjectModal, closeModal, saveNewProject, deleteProject,
-  loadProject, autoSave, exportProjectJSON, importProjectJSON,
+  loadProject, autoSave, autoSaveDebounced, exportProjectJSON, importProjectJSON,
   migrateState,
 });
