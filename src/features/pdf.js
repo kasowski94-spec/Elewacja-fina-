@@ -1,7 +1,6 @@
 // ════════════ PDF / CSV EXPORT ════════════
 
-import { THICK } from '../data/constants.js';
-import { SHOP_LABELS } from '../data/constants.js';
+import { THICK, SHOP_LABELS, MAT_SECTIONS, LABOR_SECTIONS } from '../data/constants.js';
 import { wycenaRows, selectedVariant, projects, currentProject } from '../store/state.js';
 import { gv, gs, gvn } from '../utils/dom.js';
 import { fmt } from '../utils/format.js';
@@ -85,9 +84,7 @@ export async function exportPDF(mode = 'full') {
   const termin = document.getElementById('wycena-termin')?.value || '—';
   const nt = document.getElementById('wycena-notes')?.value || '';
 
-  const matSecs = ['eps', 'kleje', 'tynk', 'lacze', 'profile', 'parapety', 'tasmy', 'custom_mat'];
-  const laborSecs = ['labor', 'rusz', 'prace', 'custom_rob'];
-  const rows = mode === 'materialy' ? wycenaRows.filter(r => matSecs.includes(r.section)) : wycenaRows;
+  const rows = mode === 'materialy' ? wycenaRows.filter(r => MAT_SECTIONS.includes(r.section)) : wycenaRows;
   const docTitle = mode === 'materialy' ? 'ZESTAWIENIE MATERIAŁÓW — ETICS' : 'WYCENA ROBÓT ELEWACYJNYCH — SYSTEM ETICS';
 
   doc.setFillColor(18, 21, 31); doc.rect(0, 0, 210, 40, 'F');
@@ -182,8 +179,8 @@ export async function exportPDF(mode = 'full') {
   doc.setTextColor(200, 205, 220); doc.setFont(FONT, 'normal'); doc.setFontSize(8.5);
   let yy = y + 8;
   if (mode === 'full') {
-    const matT = rows.filter(r => matSecs.includes(r.section)).reduce((s, r) => s + (r.qty || 0) * (r.price || 0), 0);
-    const labT = rows.filter(r => laborSecs.includes(r.section)).reduce((s, r) => s + (r.qty || 0) * (r.price || 0), 0);
+    const matT = rows.filter(r => MAT_SECTIONS.includes(r.section)).reduce((s, r) => s + (r.qty || 0) * (r.price || 0), 0);
+    const labT = rows.filter(r => LABOR_SECTIONS.includes(r.section)).reduce((s, r) => s + (r.qty || 0) * (r.price || 0), 0);
     doc.text('Materiały:', 114, yy); doc.text(fmt(matT, 0) + ' zł', 196, yy, { align: 'right' }); yy += 5.5;
     doc.text('Robocizna i usługi:', 114, yy); doc.text(fmt(labT, 0) + ' zł', 196, yy, { align: 'right' }); yy += 5.5;
     doc.text('Razem netto:', 114, yy); doc.text(fmt(total, 0) + ' zł', 196, yy, { align: 'right' }); yy += 5.5;
@@ -221,9 +218,8 @@ export async function exportPDF(mode = 'full') {
 }
 
 export function buildOrderItems() {
-  const matSecs = ['eps', 'kleje', 'tynk', 'lacze', 'profile', 'parapety', 'tasmy', 'custom_mat'];
   return wycenaRows
-    .filter(r => matSecs.includes(r.section) && (r.qty || 0) > 0)
+    .filter(r => MAT_SECTIONS.includes(r.section) && (r.qty || 0) > 0)
     .map(r => ({ name: r.name.replace('◆ ', ''), unit: r.unit, qty: r.qty, price: r.price, total: (r.qty || 0) * (r.price || 0), section: r.section }));
 }
 

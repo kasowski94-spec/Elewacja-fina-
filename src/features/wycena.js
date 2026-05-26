@@ -1,6 +1,6 @@
 // ════════════ WYCENA — TABELA KOSZTORYSU ════════════
 
-import { EXTRAS_DEF, FOAM_TYPES, CORNER_MULT, SHOP_MULT, SHOP_LABELS, SHEET_TYPES } from '../data/constants.js';
+import { EXTRAS_DEF, FOAM_TYPES, CORNER_MULT, SHOP_MULT, SHOP_LABELS, SHEET_TYPES, VAT_MAT, VAT_LABOR, LABOR_SECTIONS } from '../data/constants.js';
 import { parapetCalc } from './parapets.js';
 import { getAllCustomItems } from './custom.js';
 import { wycenaRows, setWycenaRows, wycenaManualEdits, setWycenaManualEdits, selectedVariant, priceMode, clientMargin, setClientMargin } from '../store/state.js';
@@ -28,8 +28,6 @@ export function buildWycenaRows() {
   const ruszEnabled = document.getElementById('rusz-toggle')?.checked !== false;
   const shop = gs('mainShop') || 'reczne';
 
-  const foamItemsEl = window._foamItems || [];
-
   const mkRow = (name, unit, qty, baseId, extraMult, section, desc, opts = {}) => {
     const key = (section || 'eps') + '|' + (opts.key || name);
     const rowShop = wycenaManualEdits[key]?.rowShop;
@@ -39,7 +37,7 @@ export function buildWycenaRows() {
     else if (opts.noShop) price = gv(baseId);
     else price = gv(baseId) * (effShop === 'reczne' ? 1 : (SHOP_MULT[effShop] || 1));
     if (extraMult && typeof extraMult === 'number') price *= extraMult;
-    if (priceMode === 'brutto') price *= opts.noShop ? 1.23 : 1.08;
+    if (priceMode === 'brutto') price *= opts.noShop ? VAT_LABOR : VAT_MAT;
     return {
       name, unit, qty: +(+qty).toFixed(2), price: +price.toFixed(2),
       shop: opts.noShop ? '—' : effShop, section: section || 'eps', desc: desc || '', key: opts.key || null,
@@ -129,8 +127,7 @@ export function buildWycenaRows() {
       if (ov.price != null) {
         let price = ov.price;
         if (ov.savedMode && ov.savedMode !== priceMode) {
-          const laborSecs = ['labor', 'rusz', 'prace', 'custom_rob'];
-          const vat = laborSecs.includes(r.section) ? 1.23 : 1.08;
+          const vat = LABOR_SECTIONS.includes(r.section) ? VAT_LABOR : VAT_MAT;
           price = priceMode === 'brutto' ? +(price * vat).toFixed(2) : +(price / vat).toFixed(2);
         }
         r.price = price; r.shop = ov.shop || 'własna';
@@ -263,9 +260,8 @@ export function refreshSectionTotals() {
 }
 
 export function syncLiveBarFromWycena() {
-  const matSecs = ['eps', 'kleje', 'tynk', 'lacze', 'profile', 'parapety', 'tasmy', 'custom_mat'];
   const total = wycenaRows.reduce((s, r) => s + (r.qty || 0) * (r.price || 0), 0);
-  const matT = wycenaRows.filter(r => matSecs.includes(r.section)).reduce((s, r) => s + (r.qty || 0) * (r.price || 0), 0);
+  const matT = wycenaRows.filter(r => !LABOR_SECTIONS.includes(r.section)).reduce((s, r) => s + (r.qty || 0) * (r.price || 0), 0);
   const labT = total - matT;
   const ct = document.getElementById('chip-total-val');
   if (ct) ct.textContent = pln(total);
@@ -294,11 +290,9 @@ export function updClientMargin(v) {
 export function updateWycenaSummary() {
   const s = document.getElementById('wycena-summary');
   if (!s) return;
-  const matSecs = ['eps', 'kleje', 'tynk', 'lacze', 'profile', 'parapety', 'tasmy', 'custom_mat'];
-  const laborSecs = ['labor', 'rusz', 'prace', 'custom_rob'];
   const sumSec = sec => wycenaRows.filter(r => r.section === sec).reduce((a, r) => a + (r.qty || 0) * (r.price || 0), 0);
-  const matTotal = matSecs.reduce((a, sec) => a + sumSec(sec), 0);
-  const laborTotal = laborSecs.reduce((a, sec) => a + sumSec(sec), 0);
+  const matTotal = wycenaRows.filter(r => !LABOR_SECTIONS.includes(r.section)).reduce((a, r) => a + (r.qty || 0) * (r.price || 0), 0);
+  const laborTotal = LABOR_SECTIONS.reduce((a, sec) => a + sumSec(sec), 0);
   const grandTotal = matTotal + laborTotal;
 
   const isBrutto = priceMode === 'brutto';

@@ -3,13 +3,15 @@
 export const THICK = [5,8,10,12,14,15,16,18,20,25,30];
 
 export const WALL_LAMBDA = {
-  cegla_pelna:0.77,
-  pustak_ceram:0.45,
-  beton_kom:0.12,
-  zebet:2.0,
-  cegla_silikat:0.70,
-  inne:null,
+  cegla_pelna:0.77, pustak_ceram:0.45, beton_kom:0.12,
+  zebet:2.0, cegla_silikat:0.70, inne:null,
 };
+
+export const VAT_MAT   = 1.08;
+export const VAT_LABOR = 1.23;
+export const MAT_SECTIONS   = ['eps','kleje','tynk','lacze','profile','parapety','tasmy','custom_mat'];
+export const LABOR_SECTIONS = ['labor','rusz','prace','custom_rob'];
+export const RUSZ_OVERHANG  = 1.18;
 
 export const EXTRAS_DEF = [
   {id:'skucie',lbl:'Skucie starych tynków',unit:'m²',qDef:350,pDef:12,hint:'robocizna + wywóz'},
@@ -144,38 +146,3 @@ export const LABOR_TARGETS = {
   rob_ciecie:{target:'parapet_cut'},
 };
 
-export const SUBTABS_MAP = {
-  biblioteka:[
-    {id:'mat',label:'Materiały',emoji:'🧱',type:'mode'},
-    {id:'rob',label:'Robocizna',emoji:'👷',type:'mode'},
-    {id:'fav',label:'Ulubione',emoji:'⭐',type:'mode'},
-  ],
-  wycena:[
-    {id:'wys-body-eps',label:'EPS',emoji:'🧊',type:'anchor'},
-    {id:'wys-body-kleje',label:'Kleje',emoji:'🧪',type:'anchor'},
-    {id:'wys-body-tynk',label:'Tynk',emoji:'🎨',type:'anchor'},
-    {id:'wys-body-lacze',label:'Łączniki',emoji:'🔩',type:'anchor'},
-    {id:'wys-body-profile',label:'Profile',emoji:'📏',type:'anchor'},
-    {id:'wys-body-parapety',label:'Parapety',emoji:'🪟',type:'anchor'},
-    {id:'wys-body-tasmy',label:'Taśmy',emoji:'🩹',type:'anchor'},
-    {id:'wys-body-labor',label:'Robocizna',emoji:'👷',type:'anchor'},
-    {id:'wys-body-rusz',label:'Rusztowanie',emoji:'🏗',type:'anchor'},
-    {id:'wys-body-prace',label:'Prace dod.',emoji:'🔧',type:'anchor'},
-    {id:'wycena-summary',label:'Podsumowanie',emoji:'📊',type:'anchor'},
-  ],
-  ceny:[
-    {id:'pricesGrid',label:'Ceny ręczne',emoji:'💰',type:'anchor'},
-    {id:'laborLibList',label:'Robocizna z biblioteki',emoji:'👷',type:'anchor'},
-    {id:'costSection',label:'Koszty wariantu',emoji:'📦',type:'anchor'},
-    {id:'porownanie',label:'Porównanie hurtowni',emoji:'📊',type:'route'},
-  ],
-  warianty:[
-    {id:'cardsContainer',label:'Karty wariantów',emoji:'📦',type:'anchor'},
-    {id:'costTableBody',label:'Tabela kosztów',emoji:'📋',type:'anchor'},
-  ],
-  lacze:[
-    {id:'anchorResult',label:'Kalkulator',emoji:'🧮',type:'anchor'},
-    {id:'anchorTableBody',label:'Tabela długości',emoji:'📋',type:'anchor'},
-    {id:'custom-lacze',label:'Własne pozycje',emoji:'➕',type:'anchor'},
-  ],
-};

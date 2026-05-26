@@ -1,7 +1,7 @@
 // ════════════ BIBLIOTEKA MATERIAŁÓW I ROBOCIZNY ════════════
 
 import { MATERIAL_LIBRARY, LABOR_LIBRARY, MAT_CATEGORIES, LABOR_CATEGORIES } from '../data/library.js';
-import { CUSTOM_TABS } from '../data/constants.js';
+import { CUSTOM_TABS, VAT_MAT, VAT_LABOR } from '../data/constants.js';
 import {
   libMode, setLibMode, libCatActive, setLibCatActive,
   favorites, setFavorites, setLibPickerTarget, libPickerTarget,
@@ -10,7 +10,7 @@ import {
 import { customItems } from '../store/state.js';
 import { fmt } from '../utils/format.js';
 
-function vatFor(isLabor) { return priceMode === 'brutto' ? (isLabor ? 1.23 : 1.08) : 1; }
+function vatFor(isLabor) { return priceMode === 'brutto' ? (isLabor ? VAT_LABOR : VAT_MAT) : 1; }
 
 export function togglePriceMode(mode) {
   setPriceMode(mode);
@@ -83,8 +83,6 @@ export function renderLibrary() {
   const groups = {};
   data.forEach(it => { (groups[it.cat] = groups[it.cat] || []).push(it); });
 
-  // Use document fragment for performance
-  const frag = document.createDocumentFragment();
   const wrapper = document.createElement('div');
 
   const vatLabel = priceMode === 'brutto' ? 'brutto' : 'netto';

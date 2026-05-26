@@ -1,6 +1,6 @@
 // ════════════ MAIN CALCULATOR ════════════
 
-import { THICK, FOAM_TYPES, CORNER_MULT, SHOP_MULT, SHOP_LABELS } from '../data/constants.js';
+import { THICK, FOAM_TYPES, CORNER_MULT, SHOP_MULT, SHOP_LABELS, RUSZ_OVERHANG } from '../data/constants.js';
 import { selectedVariant } from '../store/state.js';
 import { gv, gs, gvn, gsn, validateInputs } from '../utils/dom.js';
 import { calcU, uColor, uPct, isRec } from '../utils/math.js';
@@ -73,7 +73,7 @@ export function calc() {
   const pPrSub = shopPrice('p_primsub'), pBond = shopPrice('p_bond'), pLab = gv('p_labor') || 80;
 
   const ruszW = gvn('ruszW', 6), ruszP = gvn('ruszP', 8), ruszMont = gvn('ruszM', 12), ruszSiatka = gvn('ruszS', 4);
-  const ruszArea = area * 1.18;
+  const ruszArea = area * RUSZ_OVERHANG;
   const ruszRaw = ruszArea * ruszP * (ruszW / 4.33) + ruszArea * ruszMont * 2 + ruszArea * ruszSiatka;
   const ruszEnabled = document.getElementById('rusz-toggle')?.checked !== false;
   const ruszTotal = ruszEnabled ? ruszRaw : 0;

@@ -1,6 +1,7 @@
 // ════════════ WŁASNE POZYCJE ════════════
 
 import { CUSTOM_TABS } from '../data/constants.js';
+import { COMMON_ITEMS } from '../data/library.js';
 import { customItems } from '../store/state.js';
 import { pln } from '../utils/format.js';
 
@@ -17,7 +18,7 @@ export function renderCustom(tab) {
   const c = document.getElementById('custom-' + tab);
   if (!c) return;
 
-  if (!document.getElementById('common-items-list') && typeof COMMON_ITEMS !== 'undefined') {
+  if (!document.getElementById('common-items-list')) {
     const dl = document.createElement('datalist');
     dl.id = 'common-items-list';
     dl.innerHTML = COMMON_ITEMS.map(x => `<option value="${x}">`).join('');

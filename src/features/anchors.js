@@ -1,13 +1,12 @@
 // ════════════ ŁĄCZNIKI MECHANICZNE ════════════
 
-import { THICK } from '../data/constants.js';
+import { THICK, WALL_LAMBDA } from '../data/constants.js';
 import { MATERIAL_LIBRARY } from '../data/library.js';
 import { selectedVariant, setSelectedVariant } from '../store/state.js';
 import { gv, gs } from '../utils/dom.js';
 import { fmt } from '../utils/format.js';
 
 export function updateWallU() {
-  const WALL_LAMBDA = { cegla_pelna: 0.77, pustak_ceram: 0.45, beton_kom: 0.12, zebet: 2.0, cegla_silikat: 0.70 };
   const mat = gs('wallMat'), thick = gv('wallThick') / 100;
   const hint = document.getElementById('wallUhint');
   if (mat === 'inne') { if (hint) hint.textContent = 'Wpisz U₀ ręcznie'; window.calc?.(); return; }
