@@ -23,7 +23,7 @@ jobs:
         run: npx esbuild src/main.js --bundle --format=iife --global-name=App --outfile=app-bundle.js
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
