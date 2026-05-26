@@ -123,7 +123,15 @@ export function buildWycenaRows() {
     const ov = wycenaManualEdits[rowKey(r)];
     if (ov) {
       if (ov.qty != null) r.qty = ov.qty;
-      if (ov.price != null) { r.price = ov.price; r.shop = ov.shop || 'własna'; }
+      if (ov.price != null) {
+        let price = ov.price;
+        if (ov.savedMode && ov.savedMode !== priceMode) {
+          const laborSecs = ['labor', 'rusz', 'prace', 'custom_rob'];
+          const vat = laborSecs.includes(r.section) ? 1.23 : 1.08;
+          price = priceMode === 'brutto' ? +(price * vat).toFixed(2) : +(price / vat).toFixed(2);
+        }
+        r.price = price; r.shop = ov.shop || 'własna';
+      }
     }
   });
 
@@ -208,6 +216,7 @@ export function editWycenaRow(gi, field, value) {
     r.shop = 'własna';
     wycenaManualEdits[key].price = num;
     wycenaManualEdits[key].shop = 'własna';
+    wycenaManualEdits[key].savedMode = priceMode;
   }
   refreshRowTotals(gi);
   refreshSectionTotals();

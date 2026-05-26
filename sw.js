@@ -8,6 +8,7 @@ const CORE = [
   './manifest.json',
   './app-bundle.js',
   './src/styles/main.css',
+  './jspdf.min.js',
 ];
 
 self.addEventListener('install', e => {
