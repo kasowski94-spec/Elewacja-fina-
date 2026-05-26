@@ -182,6 +182,7 @@ export function applyState(st) {
 export function loadProject(id) {
   if (!id || !projects[id]) return;
   setCurrentProject(id);
+  setWycenaManualEdits({});
   applyState(projects[id].data);
 }
 

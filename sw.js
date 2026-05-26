@@ -1,36 +1,13 @@
-// ElewacjaPro Service Worker v8.0
-const CACHE = 'elewacja-v8';
-const FONTS = 'elewacja-fonts-v8';
+// ElewacjaPro Service Worker v9.0
+const CACHE = 'elewacja-v9';
+const FONTS = 'elewacja-fonts-v9';
 
 const CORE = [
   './',
   './index.html',
   './manifest.json',
-  './jspdf.min.js',
-  './src/main.js',
+  './app-bundle.js',
   './src/styles/main.css',
-  './src/data/library.js',
-  './src/data/constants.js',
-  './src/utils/format.js',
-  './src/utils/dom.js',
-  './src/utils/math.js',
-  './src/utils/debounce.js',
-  './src/utils/download.js',
-  './src/store/state.js',
-  './src/services/storage.js',
-  './src/features/foam.js',
-  './src/features/parapets.js',
-  './src/features/extras.js',
-  './src/features/custom.js',
-  './src/features/anchors.js',
-  './src/features/library.js',
-  './src/features/prices.js',
-  './src/features/projects.js',
-  './src/features/wycena.js',
-  './src/features/calc.js',
-  './src/features/router.js',
-  './src/features/pdf.js',
-  './src/features/pwa.js',
 ];
 
 self.addEventListener('install', e => {

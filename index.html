@@ -303,8 +303,8 @@
   </div>
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
     <span style="font-size:.75rem;color:var(--mut);font-weight:600">Ceny:</span>
-    <button type="button" class="lib-pmode-btn active" id="pricemode-netto" onclick="togglePriceMode('netto')">Netto</button>
-    <button type="button" class="lib-pmode-btn" id="pricemode-brutto" onclick="togglePriceMode('brutto')">Brutto +VAT</button>
+    <button type="button" class="lib-pmode-btn active" data-pmode="netto" onclick="togglePriceMode('netto')">Netto</button>
+    <button type="button" class="lib-pmode-btn" data-pmode="brutto" onclick="togglePriceMode('brutto')">Brutto +VAT</button>
   </div>
 
   <!-- Wyszukiwarka + filtry kategorii -->
@@ -723,7 +723,7 @@
     <div class="ib-sub">Działaj offline · Ikonka na ekranie głównym</div>
   </div>
   <button id="ib-install">Zainstaluj</button>
-  <button id="ib-dismiss">✕</button>
+  <button id="ib-dismiss" aria-label="Zamknij">✕</button>
 </div>
 
 <div id="update-banner">
