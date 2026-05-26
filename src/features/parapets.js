@@ -25,7 +25,7 @@ export function parapetCalc(p) {
 export function parapetBoxHTML(p) {
   const cc = parapetCalc(p);
   return `
-    <div style="display:flex;justify-content:space-between"><span style="color:var(--mut)">Rozwinięcie szer. (${p.width}+2×${p.bend})</span><b>${cc.devMm} mm</b></div>
+    <div style="display:flex;justify-content:space-between"><span style="color:var(--mut)">Rozwinęcie szer. (${p.width}+2×${p.bend})</span><b>${cc.devMm} mm</b></div>
     <div style="display:flex;justify-content:space-between"><span style="color:var(--mut)">Pole blachy</span><b>${cc.areaM2.toFixed(2)} m²</b></div>
     <div style="display:flex;justify-content:space-between"><span style="color:var(--mut)">Arkusze (${cc.sheetArea.toFixed(2)} m²/ark + 10% odpad)</span><b style="color:var(--acc2)">${cc.sheetsNeeded} ark.</b></div>
     <div style="display:flex;justify-content:space-between"><span style="color:var(--mut)">Koszt blachy</span><b>${pln(cc.sheetCost)}</b></div>

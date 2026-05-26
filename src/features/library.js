@@ -5,9 +5,26 @@ import { CUSTOM_TABS } from '../data/constants.js';
 import {
   libMode, setLibMode, libCatActive, setLibCatActive,
   favorites, setFavorites, setLibPickerTarget, libPickerTarget,
+  priceMode, setPriceMode,
 } from '../store/state.js';
 import { customItems } from '../store/state.js';
 import { fmt } from '../utils/format.js';
+
+function vatFor(isLabor) { return priceMode === 'brutto' ? (isLabor ? 1.23 : 1.08) : 1; }
+
+export function togglePriceMode(mode) {
+  setPriceMode(mode);
+  document.querySelectorAll('[id^="pricemode-"]').forEach(b =>
+    b.classList.toggle('active', b.id === 'pricemode-' + mode)
+  );
+  document.querySelectorAll('[data-pmode]').forEach(b =>
+    b.classList.toggle('active', b.dataset.pmode === mode)
+  );
+  const note = document.querySelector('.lib-info-note');
+  if (note) note.dataset.priceMode = mode;
+  renderLibrary();
+  window.calc?.();
+}
 
 export function initLibMode(mode) {
   setLibMode(mode);
@@ -36,7 +53,7 @@ export function renderLibCatFilter() {
   if (!el) return;
   if (libMode === 'fav') { el.innerHTML = ''; return; }
   const cats = getLibCats();
-  el.innerHTML = `<button class="lib-cat ${libCatActive === '' ? 'active' : ''}" onclick="window.filterLibCat('')">Wszystkie</button>` +
+  el.innerHTML = `<button class="lib-cat ${libCatActive === '' ? 'active' : ''}" onclick="window.setLibMode('');window.renderLibrary();window.renderLibCatFilter()">Wszystkie</button>` +
     Object.entries(cats).map(([k, v]) =>
       `<button class="lib-cat ${libCatActive === k ? 'active' : ''}" onclick="window.filterLibCat('${k}')">${v}</button>`
     ).join('');
@@ -66,14 +83,16 @@ export function renderLibrary() {
   const groups = {};
   data.forEach(it => { (groups[it.cat] = groups[it.cat] || []).push(it); });
 
-  // Use document fragment for performance
   const frag = document.createDocumentFragment();
   const wrapper = document.createElement('div');
 
+  const vatLabel = priceMode === 'brutto' ? 'brutto' : 'netto';
   wrapper.innerHTML = Object.entries(groups).map(([cat, items]) => `
     <div class="lib-section-hdr">${cats[cat] || cat}</div>
     ${items.map(it => {
     const fav = favorites.includes(it.id);
+    const isLab = LABOR_LIBRARY.some(x => x.id === it.id);
+    const vat = vatFor(isLab);
     return `<div class="lib-item">
         <button class="lib-fav ${fav ? 'on' : ''}" onclick="window.toggleFav('${it.id}')" title="Ulubione">${fav ? '⭐' : '☆'}</button>
         <div class="lib-item-body" onclick="window.addFromLibrary('${it.id}')">
@@ -81,8 +100,8 @@ export function renderLibrary() {
           <div class="lib-item-meta">${it.note ? it.note + ' · ' : ''}${it.lambda ? 'λ=' + it.lambda + ' · ' : ''}jedn. ${it.unit}</div>
         </div>
         <div class="lib-item-price">
-          <div class="lib-price-avg">${fmt(it.avg, 2)} zł</div>
-          <div class="lib-price-range">${fmt(it.low, 2)}–${fmt(it.high, 2)}</div>
+          <div class="lib-price-avg">${fmt(it.avg * vat, 2)} zł</div>
+          <div class="lib-price-range">${fmt(it.low * vat, 2)}–${fmt(it.high * vat, 2)} <span style="font-size:.58rem;color:var(--mut)">${vatLabel}</span></div>
         </div>
         <button class="lib-add" onclick="window.addFromLibrary('${it.id}')" title="Dodaj do projektu">+</button>
       </div>`;
@@ -158,7 +177,7 @@ export function showLibAddModal(it, defTab, isLabor) {
     </div>
     <div style="display:flex;gap:5px;margin-bottom:12px">
       <button class="btn sm" style="flex:1;justify-content:center" onclick="document.getElementById('libadd-price').value=${it.low}">Najniższa</button>
-      <button class="btn sm" style="flex:1;justify-content:center" onclick="document.getElementById('libadd-price').value=${it.avg}">Średnia</button>
+      <button class="btn sm" style="flex:1;justify-content:center" onclick="document.getElementById('libadd-price').value=${it.avg}">'Średnias</button>
       <button class="btn sm" style="flex:1;justify-content:center" onclick="document.getElementById('libadd-price').value=${it.high}">Wysoka</button>
     </div>
     <div class="btn-row" style="margin-bottom:0">
@@ -199,4 +218,5 @@ Object.assign(window, {
   openLibraryPicker,
   loadFavorites,
   saveFavorites,
+  togglePriceMode,
 });

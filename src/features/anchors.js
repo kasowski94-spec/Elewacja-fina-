@@ -1,134 +1,129 @@
-// ════════════ ŁĄCZNIKI MECHANICZNE ════════════
+// ════════════ ŁĄCZNIKI ════════════
 
-import { THICK } from '../data/constants.js';
-import { MATERIAL_LIBRARY } from '../data/library.js';
+import { THICK, WALL_LAMBDA } from '../data/constants.js';
 import { selectedVariant, setSelectedVariant } from '../store/state.js';
-import { gv, gs } from '../utils/dom.js';
+import { calcU } from '../utils/math.js';
 import { fmt } from '../utils/format.js';
+import { MATERIAL_LIBRARY } from '../data/library.js';
 
 export function updateWallU() {
-  const WALL_LAMBDA = { cegla_pelna: 0.77, pustak_ceram: 0.45, beton_kom: 0.12, zebet: 2.0, cegla_silikat: 0.70 };
-  const mat = gs('wallMat'), thick = gv('wallThick') / 100;
+  const mat = document.getElementById('wallMat')?.value;
+  const thick = parseFloat(document.getElementById('wallThick')?.value) || 25;
   const hint = document.getElementById('wallUhint');
-  if (mat === 'inne') { if (hint) hint.textContent = 'Wpisz U₀ ręcznie'; window.calc?.(); return; }
-  const lam = WALL_LAMBDA[mat];
-  if (!lam) { window.calc?.(); return; }
-  const U0 = 1 / (0.13 + thick / lam + 0.04);
-  const el = document.getElementById('wallU0');
-  if (el) el.value = U0.toFixed(3);
-  if (hint) hint.textContent = `U₀ ≈ ${U0.toFixed(3)} (λ=${lam})`;
-  window.calc?.();
+  const u0el = document.getElementById('wallU0');
+  const wd = WALL_LAMBDA[mat];
+  if (!wd || wd.lambda === null) { if (hint) hint.textContent = 'Wpisz U₀ ręcznie'; return; }
+  const R_wall = (thick / 100) / wd.lambda;
+  const u0 = 1 / (0.13 + R_wall + 0.04);
+  if (u0el) u0el.value = u0.toFixed(2);
+  if (hint) hint.textContent = `U₀ ≈ ${u0.toFixed(2)} (${wd.desc})`;
+  if (typeof window.debCalc === 'function') window.debCalc();
 }
 
-export function recAnchors(keepManual) {
-  const h = gv('buildH') || 9;
-  const wf = parseFloat(gs('windZone')) || 1;
-  const base = h <= 20 ? 6 : h <= 60 ? 8 : 10;
-  const auto = Math.min(16, Math.ceil(base * wf));
+export function recAnchors(skipCalc = false) {
+  const h = parseFloat(document.getElementById('buildH')?.value) || 9;
+  const wz = parseFloat(document.getElementById('windZone')?.value) || 1.0;
+  let base = 4;
+  if (h > 20) base = 6;
+  else if (h > 12) base = 5;
+  const rec = Math.ceil(base * wz);
   const el = document.getElementById('anchPerM2');
-  if (el && !keepManual) el.value = auto;
+  if (el && !el.dataset.manual) el.value = rec;
   calcAnchor();
-  window.calc?.();
+  if (!skipCalc && typeof window.debCalc === 'function') window.debCalc();
 }
 
 export function calcAnchor() {
-  const eps = gv('ancEps') || 15;
-  const subst = gv('ancSubst') || 50;
-  const tynk = gv('ancTynk') || 10;
-  const warst = gv('ancWarst') || 5;
-  const total = eps * 10 + tynk + warst + subst;
-  const rnd = Math.ceil(total / 10) * 10;
-  const dia = gs('anchDia') || '10';
-
+  const eps = parseFloat(document.getElementById('ancEps')?.value || document.getElementById('epsThick')?.value) || selectedVariant;
+  const subst = parseFloat(document.getElementById('ancSubst')?.value) || 50;
+  const tynk = parseFloat(document.getElementById('ancTynk')?.value) || 10;
+  const warst = parseFloat(document.getElementById('ancWarst')?.value) || 5;
+  const totalMm = eps * 10 + tynk + warst + subst;
   const res = document.getElementById('anchorResult');
-  if (res) res.innerHTML = `
-    <div style="background:var(--card2);border-radius:8px;padding:10px 12px">
-      <div style="font-size:.7rem;color:var(--mut);margin-bottom:5px">Obliczona długość minimalna:</div>
-      <div style="font-family:var(--font-head);font-size:1.45rem;font-weight:800;color:var(--acc2)">${total} mm
-        <span style="font-size:.85rem;color:var(--mut)">→ wybierz <strong style="color:var(--acc)">${rnd} mm</strong></span></div>
-      <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:6px">
-        <span style="font-size:.65rem;color:var(--mut)">EPS: <b style="color:var(--txt)">${eps * 10}mm</b></span>
-        <span style="font-size:.65rem;color:var(--mut)">Tynk: <b style="color:var(--txt)">${tynk}mm</b></span>
-        <span style="font-size:.65rem;color:var(--mut)">Zbroj.: <b style="color:var(--txt)">${warst}mm</b></span>
-        <span style="font-size:.65rem;color:var(--mut)">Zakotw.: <b style="color:var(--txt)">${subst}mm</b></span>
-        <span style="font-size:.65rem;color:var(--mut)">Średnica: <b style="color:var(--txt)">${dia === '60' ? 'talerz 90mm' : dia + 'mm'}</b></span>
-      </div>
+  if (res) {
+    res.innerHTML = `<div style="background:var(--card2);border:1px solid var(--brd);border-radius:8px;padding:10px 12px;font-size:.72rem">
+      <b style="color:var(--acc2)">Wymagana długość łącznika: ${totalMm} mm</b><br>
+      <span style="color:var(--mut)">EPS ${eps}cm = ${eps*10}mm + tynk ${tynk}mm + zbrojenie ${warst}mm + zakotwienie ${subst}mm</span>
     </div>`;
-
-  const tbody = document.getElementById('anchorTableBody');
-  if (tbody) {
-    tbody.innerHTML = '';
-    const ty = gv('ancTynk') || 10, wa = gv('ancWarst') || 5;
-    const area = gv('area') || 350, a = gv('anchPerM2') || 6;
-    THICK.forEach(t => {
-      tbody.innerHTML += `<tr><td><strong>${t} cm</strong></td>${[50, 80, 60, 100].map(s => `<td>${Math.ceil((t * 10 + ty + wa + s) / 10) * 10} mm</td>`).join('')}<td>${fmt(Math.ceil(area * a))}</td></tr>`;
-    });
   }
-
   const lbl = document.getElementById('ancTypeLbl');
-  const m = { stal: 'Stalowy ocynkowany', poliamid: 'Poliamidowy', termo: 'Z wkładką termiczną' };
-  if (lbl) lbl.textContent = m[gs('anchType')] || 'Stalowy';
+  if (lbl) lbl.textContent = document.getElementById('anchType')?.selectedOptions[0]?.text || '';
 
-  autoPickKolek();
+  const tb = document.getElementById('anchorTableBody');
+  if (tb) {
+    const substVals = [50, 80, 60, 100];
+    const anch = parseFloat(document.getElementById('anchPerM2')?.value) || 6;
+    const area = parseFloat(document.getElementById('area')?.value) || 350;
+    tb.innerHTML = THICK.map(t => {
+      const len = substVals.map(s => t * 10 + tynk + warst + s);
+      return `<tr ${t === selectedVariant ? 'style="background:rgba(232,84,26,.07)"' : ''}>
+        <td><b>${t} cm</b></td>${len.map(l => `<td>${l} mm</td>`).join('')}
+        <td style="color:var(--acc2)">${Math.ceil(area * anch)}</td></tr>`;
+    }).join('');
+  }
 }
 
 export function setVariant(t) {
-  if (!THICK.includes(t)) t = 15;
   setSelectedVariant(t);
-  const et = document.getElementById('epsThick'); if (et && +et.value !== t) et.value = t;
-  const ae = document.getElementById('ancEps'); if (ae && +ae.value !== t) ae.value = t;
+  const el = document.getElementById('epsThick');
+  if (el) el.value = String(t);
+  const el2 = document.getElementById('ancEps');
+  if (el2) el2.value = String(t);
   calcAnchor();
-  window.calc?.();
+  updKolekOptions();
+  document.querySelectorAll('.vc').forEach(c => {
+    const isSelected = parseInt(c.querySelector('.vt')?.textContent) === t;
+    c.classList.toggle('sel', isSelected);
+  });
+  if (typeof window.calc === 'function') window.calc();
 }
 
 export function kolekListFor(type) {
-  const prefix = type === 'pcv' ? 'kolek_pcv_' : type === 'met' ? 'kolek_met_' : 'kolek_termo_';
-  return MATERIAL_LIBRARY.filter(x => x.id.startsWith(prefix));
+  const prefixes = { pcv: 'kolek_pcv_', met: 'kolek_met_', termo: 'kolek_termo_' };
+  const prefix = prefixes[type] || 'kolek_pcv_';
+  return MATERIAL_LIBRARY.filter(it => it.id.startsWith(prefix))
+    .map(it => {
+      const mm = parseInt(it.id.replace(prefix, ''));
+      return { mm, name: it.name, low: it.low, avg: it.avg, high: it.high };
+    })
+    .sort((a, b) => a.mm - b.mm);
 }
 
 export function updKolekOptions() {
-  const type = gs('kolekType') || 'pcv';
+  const type = document.getElementById('kolekType')?.value || 'pcv';
   const sel = document.getElementById('kolekLen');
   if (!sel) return;
-  const prevId = sel.value;
   const list = kolekListFor(type);
-  sel.innerHTML = list.map(x => {
-    const mm = x.id.replace(/\D/g, '');
-    return `<option value="${x.id}">${mm} mm — ${x.note || ''}</option>`;
-  }).join('');
-  if (list.some(x => x.id === prevId)) sel.value = prevId;
-  else autoPickKolek();
+  const eps = selectedVariant;
+  const tynk = parseFloat(document.getElementById('ancTynk')?.value) || 10;
+  const warst = parseFloat(document.getElementById('ancWarst')?.value) || 5;
+  const subst = parseFloat(document.getElementById('ancSubst')?.value) || 50;
+  const need = eps * 10 + tynk + warst + subst;
+  sel.innerHTML = list.map(k =>
+    `<option value="${k.mm}" ${k.mm >= need && (list.find(x=>x.mm>=need)?.mm===k.mm) ? 'selected' : ''}>${k.mm} mm — ${k.name}</option>`
+  ).join('');
   updKolekPrice();
 }
 
 export function autoPickKolek() {
-  const sel = document.getElementById('kolekLen');
-  if (!sel || !sel.options.length) return;
-  const eps = gv('ancEps') || selectedVariant;
-  const subst = gv('ancSubst') || 50;
-  const tynk = gv('ancTynk') || 10;
-  const warst = gv('ancWarst') || 5;
-  const need = eps * 10 + tynk + warst + subst;
-  let best = sel.options[sel.options.length - 1].value, bestMm = Infinity;
-  for (const o of sel.options) {
-    const mm = parseInt(o.value.replace(/\D/g, ''), 10) || 0;
-    if (mm >= need && mm < bestMm) { bestMm = mm; best = o.value; }
-  }
-  sel.value = best;
+  updKolekOptions();
 }
 
 export function updKolekPrice() {
-  const id = gs('kolekLen');
+  const type = document.getElementById('kolekType')?.value || 'pcv';
+  const len = parseInt(document.getElementById('kolekLen')?.value) || 200;
+  const prefixes = { pcv: 'kolek_pcv_', met: 'kolek_met_', termo: 'kolek_termo_' };
+  const id = (prefixes[type] || 'kolek_pcv_') + len;
   const it = MATERIAL_LIBRARY.find(x => x.id === id);
-  const el = document.getElementById('kolekPrice');
+  const price = document.getElementById('kolekPrice');
   const hint = document.getElementById('kolekHint');
-  if (it && el) {
-    el.value = it.avg;
-    if (hint) hint.textContent = `rynkowo ${fmt(it.low, 2)}–${fmt(it.high, 2)} zł — ${it.name}`;
+  if (it && price) {
+    price.value = it.avg.toFixed(2);
+    if (hint) hint.textContent = `rynkowa: ${fmt(it.low,2)}–${fmt(it.high,2)} zł/szt.`;
+  } else if (hint) {
+    hint.textContent = 'brak w bibliotece';
   }
-  const pAnch = document.getElementById('p_anchor');
-  if (pAnch && el) pAnch.value = el.value;
-  window.calc?.();
+  if (typeof window.debCalc === 'function') window.debCalc();
 }
 
 Object.assign(window, {

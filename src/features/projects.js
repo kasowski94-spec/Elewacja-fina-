@@ -1,6 +1,6 @@
 // ════════════ PROJEKTY ════════════
 
-import { CUSTOM_TABS, PROJECT_SCHEMA_VER, PARAPET_DEFAULTS, THICK } from '../data/constants.js';
+import { CUSTOM_TABS, PROJECT_SCHEMA_VER, PARAPET_DEFAULTS } from '../data/constants.js';
 import {
   projects, setProjects, currentProject, setCurrentProject,
   customItems, foamItems, setFoamItems, parapets, setParapets,
@@ -115,7 +115,6 @@ export function applyState(st) {
   if (!st) return;
   st = migrateState(st);
 
-  // kolekLen zależy od updKolekOptions — ustaw typ najpierw
   if (st.kolekType) {
     const kt = document.getElementById('kolekType');
     if (kt) kt.value = st.kolekType;
@@ -130,8 +129,8 @@ export function applyState(st) {
       return;
     }
     if (f === 'selectedVariant') {
-      const t = THICK.includes(st[f]) ? st[f] : 15;
-      setSelectedVariant(t);
+      const { THICK } = window.__AppData || {};
+      if (THICK) { const t = THICK.includes(st[f]) ? st[f] : 15; setSelectedVariant(t); }
       return;
     }
     if (f === 'parapets') {
@@ -182,6 +181,7 @@ export function applyState(st) {
 export function loadProject(id) {
   if (!id || !projects[id]) return;
   setCurrentProject(id);
+  setWycenaManualEdits({});
   applyState(projects[id].data);
 }
 
@@ -244,7 +244,6 @@ export function importProjectJSON(event) {
   event.target.value = '';
 }
 
-// Expose to global scope for HTML attribute handlers
 Object.assign(window, {
   newProjectModal, closeModal, saveNewProject, deleteProject,
   loadProject, autoSave, exportProjectJSON, importProjectJSON,
