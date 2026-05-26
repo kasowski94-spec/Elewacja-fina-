@@ -111,13 +111,12 @@ export function buildWycenaRows() {
   const secPrace = EXTRAS_DEF.filter(e => document.getElementById('ext_' + e.id)?.checked).map(e => mkRow(e.lbl, e.unit, parseFloat(document.getElementById('ext_qty_' + e.id)?.value) || 0, parseFloat(document.getElementById('ext_p_' + e.id)?.value) || 0, null, 'prace', e.hint, { noShop: true, key: 'ex_' + e.id }));
   const secCustomRob = getAllCustomItems().filter(it => ['dodatki', 'lacze'].includes(it.tab)).map(it => mkRow('◆ ' + it.name, it.unit, it.qty, it.price, null, 'custom_rob', 'Własna praca/usługa', { noShop: true, key: 'cr_' + it.id }));
 
-  let lp = 1;
-  const addLp = arr => arr.map(row => ({ lp: lp++, ...row }));
   const newRows = [
-    ...addLp(secEPS), ...addLp(secKleje), ...addLp(secTynk), ...addLp(secLacze),
-    ...addLp(secProfile), ...addLp(secParapety), ...addLp(secTasmy), ...addLp(secCustomMat),
-    ...addLp(secLabor), ...addLp(secRusz), ...addLp(secPrace), ...addLp(secCustomRob),
+    ...secEPS, ...secKleje, ...secTynk, ...secLacze,
+    ...secProfile, ...secParapety, ...secTasmy, ...secCustomMat,
+    ...secLabor, ...secRusz, ...secPrace, ...secCustomRob,
   ];
+  newRows.forEach((r, i) => { r.lp = i + 1; });
 
   newRows.forEach(r => {
     const ov = wycenaManualEdits[rowKey(r)];
