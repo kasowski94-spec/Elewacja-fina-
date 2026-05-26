@@ -95,14 +95,14 @@ export const PROJECT_SCHEMA_VER = 2;
 export const CUSTOM_TABS = ['ustawienia','materialy','parapety','dodatki','lacze'];
 
 export const TABS_ORDER = [
-  'ustawienia','warianty','materialy','biblioteka','parapety',
-  'dodatki','lacze','ceny','porownanie','wycena','rusztowanie',
+  'ustawienia','warianty','materialy','ceny','wycena',
+  'biblioteka','porownanie','parapety','lacze','dodatki','rusztowanie',
 ];
 
 // Mapowanie pól cen na pozycje z biblioteki materiałów / robocizny
 export const PRICE_LIBRARY_MAP = {
   p_eps:{lib:'mat',ids:['eps_b_038_15','eps_g_033_15','eps_g_031_15','eps_b_040_15','eps_b_038_10','eps_g_033_10','eps_b_038_20','eps_g_033_20','wm_fasada_15'],
-    transform:(it)=>{const m=it.id.match(/_(\d+)$/);const cm=m?parseInt(m[1],10):15;return{low:it.low/cm,avg:it.avg/cm,high:it.high/cm,note:'÷ '+cm+' cm = zł/m²/cm'};}},
+    transform:(it)=>{const m=it.id.match(/_(\ d+)$/);const cm=m?parseInt(m[1],10):15;return{low:it.low/cm,avg:it.avg/cm,high:it.high/cm,note:'÷ '+cm+' cm = zł/m²/cm'};}},
   p_anchor:{lib:'mat',ids:['kolek_pcv_160','kolek_pcv_200','kolek_pcv_220','kolek_pcv_260','kolek_met_200','kolek_met_240','kolek_termo_200','kolek_termo_240']},
   p_cap:{lib:'mat',ids:['zasl_eps_b','zasl_eps_g','zasl_welna','zasl_eps_90']},
   p_adhesive:{lib:'mat',ids:['klej_eps_25','klej_uniw_25','klej_grafit_25'],transform:(it)=>({low:it.low/25,avg:it.avg/25,high:it.high/25,note:'÷ 25 kg = zł/kg'})},

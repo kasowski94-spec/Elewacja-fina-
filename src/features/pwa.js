@@ -99,9 +99,9 @@ document.addEventListener('touchend', e => {
   if (!e.changedTouches[0]) return;
   const dx = e.changedTouches[0].clientX - touchStartX;
   const dy = e.changedTouches[0].clientY - touchStartY;
-  if (Math.abs(dx) < 60 || Math.abs(dy) > Math.abs(dx)) return;
+  if (Math.abs(dx) < 60 || Math.abs(dy) > Math.abs(dx) * 0.8) return;
   const target = e.target;
-  if (target.closest('input,select,textarea,.wr,.we-row,#subtabs-bar,#live-bar,#bottom-nav')) return;
+  if (target.closest('input,select,textarea,.wr,.we-row')) return;
   const active = document.querySelector('.tab-panel.active');
   if (!active) return;
   const cur = active.id.replace('tab-', '');
@@ -129,8 +129,6 @@ function updateTopbarH() {
   }
   setCurrentProject(Object.keys(projects)[0]);
   window.refreshProjectSelect?.();
-  window.buildPricesGrid?.();
-  window.renderLaborLibrary?.();
   const st = projects[currentProject]?.data;
   if (st) window.applyState?.(st);
   else { window.updateWallU?.(); window.recAnchors?.(); }
@@ -146,6 +144,7 @@ function updateTopbarH() {
   window.renderParapets?.();
   CUSTOM_TABS.forEach(t => window.renderCustom?.(t));
   window.buildExtras?.();
+  window.renderLaborLibrary?.();
   window.loadFavorites?.();
   window.renderLibCatFilter?.();
   window.renderLibrary?.();
@@ -191,13 +190,30 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Sync bottom nav with swTab
+  const TAB_PARENT = {
+    porownanie: 'ceny',
+    biblioteka: null,
+    parapety: null,
+    dodatki: null,
+    lacze: null,
+    rusztowanie: null,
+  };
   const origSwTab = window.swTab;
   if (origSwTab) {
     window.swTab = function (name) {
       origSwTab(name);
-      const bnBtn = document.querySelector(`#bottom-nav .bn-item[data-tab="${name}"]`);
       document.querySelectorAll('.bn-item').forEach(b => b.classList.remove('active'));
-      if (bnBtn) bnBtn.classList.add('active');
+      const bnBtn = document.querySelector(`#bottom-nav .bn-item[data-tab="${name}"]`);
+      if (bnBtn) {
+        bnBtn.classList.add('active');
+      } else if (Object.prototype.hasOwnProperty.call(TAB_PARENT, name)) {
+        const parentTab = TAB_PARENT[name];
+        if (parentTab) {
+          document.querySelector(`#bottom-nav .bn-item[data-tab="${parentTab}"]`)?.classList.add('active');
+        } else {
+          document.getElementById('bn-more')?.classList.add('active');
+        }
+      }
       hideMore();
       window.scrollTo(0, 0);
     };
